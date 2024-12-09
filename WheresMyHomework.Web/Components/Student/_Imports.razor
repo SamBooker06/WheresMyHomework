@@ -1,0 +1,10 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using WheresMyHomework.Core.Services
+@using WheresMyHomework.Core.Services.Auth
+@using WheresMyHomework.Core.Services.Homework
+@using WheresMyHomework.Data.Models.Users
+
+@attribute [Authorize(Roles = "Student")]
+
+@inject IHomeworkService HomeworkService
+@inject StudentAuthService StudentAuthService

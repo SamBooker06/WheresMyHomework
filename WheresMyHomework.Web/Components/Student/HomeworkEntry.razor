@@ -1,0 +1,53 @@
+﻿@using WheresMyHomework.Core.Services.Homework.DTO
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Core.Services.Users
+@rendermode InteractiveServer
+
+
+<div class="homework-entry card mb-3" @onclick="HandleClick" style="cursor: pointer">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-2">
+                <div class="due-date text-center">
+                    <div class="date-day">@DueDate.Day</div>
+                    <div class="date-month">@DueDate.ToString("MMMM")</div>
+                </div>
+            </div>
+            <div class="col-8">
+                <div class="homework-title">@TaskInfo.Title</div>
+                <div
+                    class="homework-subject">@User.Title @User.LastName - @ClassResponse.Subject.Name</div>
+            </div>
+            <div class="col-2 text-right">
+                
+                <span
+                    class="badge badge-danger text-center text-black">@(TaskInfo.IsComplete ? "Complete" : "Incomplete")
+                </span>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public required StudentHomeworkResponseInfo TaskInfo { get; set; }
+    [Parameter] public EventCallback<StudentHomeworkResponseInfo> OnClick { get; set; }
+
+    private DateTime DueDate { get; set; }
+
+    private UserInfo User { get; set; } = null!;
+    private SchoolClassResponseInfo ClassResponse { get; set; } = null!;
+    
+    protected override void OnInitialized()
+    {
+        ClassResponse = TaskInfo.ClassResponse;
+        User = TaskInfo.ClassResponse.Teacher;
+        DueDate = TaskInfo.DueDate;
+    }
+
+    private async Task HandleClick(MouseEventArgs e)
+    {
+        await OnClick.InvokeAsync(TaskInfo);
+    }
+
+}

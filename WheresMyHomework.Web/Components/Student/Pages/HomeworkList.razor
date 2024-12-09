@@ -1,0 +1,29 @@
+﻿@using System.Diagnostics
+@using WheresMyHomework.Core.Services.Homework.DTO
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+
+@inject NavigationManager Navigator
+@rendermode InteractiveServer
+
+@foreach (var task in _homeworkTasks)
+{
+    <HomeworkEntry TaskInfo="task" OnClick="RedirectToHomeworkDetailView"/>
+}
+
+@code {
+    private ICollection<StudentHomeworkResponseInfo> _homeworkTasks = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var student = await StudentAuthService.GetAuthenticatedUserInfoAsync();
+        Debug.Assert(student != null);
+
+        _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId);
+    }
+
+    private void RedirectToHomeworkDetailView(StudentHomeworkResponseInfo taskResponseInfo)
+    {
+        Navigator.NavigateTo($"Homework/{taskResponseInfo.Id}");
+    }
+
+}

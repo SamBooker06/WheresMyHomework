@@ -1,0 +1,7 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using WheresMyHomework.Core.Services.Auth
+@using WheresMyHomework.Core.Services.Users
+@attribute [Authorize(Roles = "Admin")]
+
+@inject AdminAuthService AdminAuthService
+@inject IAdminService AdminService

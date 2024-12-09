@@ -1,0 +1,35 @@
+﻿@using System.Diagnostics
+@using WheresMyHomework.Core.Services.Users
+@inject NavigationManager Navigator
+
+
+@rendermode InteractiveServer
+<h1>Hello, @TeacherInfo.Title @TeacherInfo.LastName</h1>
+<h3>Welcome to the teacher dashboard</h3>
+
+
+<button @onclick="GoToSetHomework">Set homework</button>
+<button @onclick="GoToViewHomework">View homework</button>
+
+@code {
+    private TeacherInfo TeacherInfo { get; set; } = null!;
+
+    private void GoToSetHomework(MouseEventArgs e)
+    {
+        Navigator.NavigateTo("Homework/Create");
+    }
+
+    private void GoToViewHomework()
+    {
+        Navigator.NavigateTo("Homework");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authInfo = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
+        Debug.Assert(authInfo != null);
+
+        TeacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
+    }
+
+}

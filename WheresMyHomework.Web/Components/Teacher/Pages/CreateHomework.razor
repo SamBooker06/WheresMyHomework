@@ -1,0 +1,90 @@
+﻿@page "/Homework/Create"
+@using System.ComponentModel.DataAnnotations
+@using System.Diagnostics
+@using WheresMyHomework.Core.Services.Homework.DTO.Request
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+
+@if (_hasJustSubmitted)
+{
+    <p>Created homework!</p>
+}
+
+<section>
+    <EditForm Model="Input" method="post" OnValidSubmit="SubmitFormAsync" FormName="CreateHomework">
+        <DataAnnotationsValidator/>
+
+        <div class="form-floating mb-3">
+            <InputText @bind-Value="Input.Title" id="Input.Title" class="form-control"/>
+            <label for="Input.Title" class="form-label">Title</label>
+            <ValidationMessage For="() => Input.Title"/>
+        </div>
+
+        <div class="form-floating mb-3">
+            <InputTextArea @bind-Value="Input.Description" id="Input.Description" class="form-control"/>
+            <label for="Input.Description">Description</label>
+            <ValidationMessage For="() => Input.Description"/>
+        </div>
+
+        <div class="form-floating mb-3">
+            <InputDate @bind-Value="Input.DueDate" id="Input.DueDate"
+                       class="form-control" EnableMinMax="true" Min="@DateTime.Now.ToString("yyyy-MM-dd")"/>
+            <label for="Input.DueDate">Due date</label>
+            <ValidationMessage For="() => Input.DueDate">Homework must be set in the future</ValidationMessage>
+        </div>
+
+        <div class="form-floating">
+            <InputSelect @bind-Value="Input.ClassId" id="Input.ClassId" class="form-select">
+                @foreach (var cls in Classes)
+                {
+                    <option value="@cls.Id">@cls.Subject.Name - @cls.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button class="btn-sm" type="submit">Create homework</button>
+
+    </EditForm>
+</section>
+
+@code {
+    [SupplyParameterFromForm] private HomeworkFormInput Input { get; set; } = new();
+    private bool _hasJustSubmitted;
+
+    private ICollection<SchoolClassResponseInfo> Classes { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authInfo = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
+        Debug.Assert(authInfo != null);
+
+        var teacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
+        Classes = teacherInfo.Classes;
+    }
+
+    private async Task SubmitFormAsync()
+    {
+        _hasJustSubmitted = true;
+
+        await HomeworkService.CreateHomeworkAsync(new HomeworkRequestInfo
+        {
+            Title = Input.Title,
+            Description = Input.Description,
+            ClassId = Input.ClassId,
+            SetDate = DateTime.Now.Date,
+            DueDate = Input.DueDate
+        });
+
+    }
+
+    private class HomeworkFormInput
+    {
+        [Required, MaxLength(40)] public string Title { get; set; } = string.Empty;
+
+        [Required, MinLength(5), MaxLength(500)]
+        public string Description { get; set; } = string.Empty;
+
+        [Required] public DateTime DueDate { get; set; } = DateTime.Now.Date + TimeSpan.FromDays(7);
+        [Required] public int ClassId { get; set; }
+    }
+
+}

@@ -1,0 +1,20 @@
+﻿@page "/Homework/{Id:int}"
+@using System.Diagnostics
+@using WheresMyHomework.Core.Services.Homework.DTO
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+
+<h3>@HomeworkResponseTask.Title</h3>
+
+@code {
+    [Parameter] public int Id { get; init; }
+    public required StudentHomeworkResponseInfo HomeworkResponseTask { get; set; } = null!; 
+
+    protected override async Task OnInitializedAsync()
+    {
+        var student = await StudentAuthService.GetAuthenticatedUserInfoAsync();
+        Debug.Assert(student != null);
+
+        HomeworkResponseTask = await HomeworkService.GetStudentHomeworkInfoByIdAsync(Id, student.UserId);
+    }
+
+}

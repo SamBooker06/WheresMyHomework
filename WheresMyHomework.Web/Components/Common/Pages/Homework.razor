@@ -1,0 +1,25 @@
+﻿@page "/Homework"
+@using WheresMyHomework.Web.Components.Student.Pages
+@using WheresMyHomework.Web.Components.Teacher.Pages
+
+@if (_isStudent)
+{
+    <HomeworkList />
+}
+else if (_isTeacher)
+{
+    <TeacherHomeworkList/>
+}
+
+@code {
+    private bool _isTeacher;
+    private bool _isStudent;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isTeacher = await TeacherAuthService.IsAuthenticatedAsync();
+        _isStudent = await StudentAuthService.IsAuthenticatedAsync();
+        
+    }
+
+}

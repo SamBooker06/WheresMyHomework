@@ -1,0 +1,39 @@
+﻿@using System.Diagnostics
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Data.Models
+@* Testing file *@
+
+<h1>Teacher view</h1>
+
+@foreach (var task in _homeworkTasks)
+{
+    <div>
+        <h3>@task.Title</h3>
+        <p>@task.Description</p>
+    </div>
+}
+
+@code {
+
+    private IEnumerable<HomeworkResponseInfo> _homeworkTasks = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var teacher = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
+        Debug.Assert(teacher != null);
+
+        var teacherInfo = await TeacherService.GetTeacherInfoAsync(teacher.UserId);
+
+        foreach (var cls in teacherInfo.Classes)
+        {
+            var homeworkInfo = (await HomeworkService.GetHomeworkInfoByClassIdAsync(cls.Id));
+        }
+
+        // SelectMany does not support async anon functions, so must flatten synchronously
+        var unflattenedHomework = await Task.WhenAll(teacherInfo.Classes
+            .Select(async cls => await HomeworkService.GetHomeworkInfoByClassIdAsync(cls.Id)));
+
+        _homeworkTasks = unflattenedHomework.SelectMany(info => info);
+    }
+
+}

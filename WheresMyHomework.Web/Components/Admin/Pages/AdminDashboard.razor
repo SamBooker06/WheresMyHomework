@@ -1,0 +1,19 @@
+﻿@using System.Diagnostics
+
+@rendermode InteractiveServer
+
+<h3>Hello, @Info.Title @Info.LastName</h3>
+<button>Create class</button>
+
+@code {
+    private AdminInfo Info { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authInfo = await AdminAuthService.GetAuthenticatedUserInfoAsync();
+        Debug.Assert(authInfo != null);
+
+        Info = await AdminService.GetAdminInfoAsync(authInfo.UserId);
+    }
+
+}

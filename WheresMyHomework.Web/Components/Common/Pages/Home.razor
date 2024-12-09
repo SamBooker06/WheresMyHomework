@@ -1,0 +1,35 @@
+﻿@page "/"
+@using WheresMyHomework.Web.Components.Teacher.Pages
+@using WheresMyHomework.Web.Components.Admin.Pages
+
+@inject NavigationManager Navigator
+
+@if (_isStudent)
+{
+    Navigator.NavigateTo("Homework");
+}
+else if (_isTeacher)
+{
+    <TeacherDashboard/>
+}
+else if (_isAdmin)
+{
+    <AdminDashboard/>
+}
+
+@code {
+    private bool _isStudent;
+    private bool _isTeacher;
+    private bool _isAdmin;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isStudent = await StudentAuthService.IsAuthenticatedAsync();
+        _isTeacher = await TeacherAuthService.IsAuthenticatedAsync();
+        _isAdmin = await AdminAuthService.IsAuthenticatedAsync();
+
+        // This needs to go here otherwise throws NavigationError (bug) - https://github.com/aspnet/AspNetCore/issues/13582
+        if (!(_isStudent || _isTeacher || _isAdmin)) Navigator.NavigateTo("Account/Login");
+    }
+
+}
