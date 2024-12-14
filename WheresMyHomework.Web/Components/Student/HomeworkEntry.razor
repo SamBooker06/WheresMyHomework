@@ -1,8 +1,17 @@
 ﻿@using WheresMyHomework.Core.Services.Homework.DTO
 @using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Core.Services.SubjectService
 @using WheresMyHomework.Core.Services.Users
+
+@inject ISubjectService SubjectService
+@inject ITeacherService TeacherService
+
 @rendermode InteractiveServer
 
+@* References:
+https://getbootstrap.com/docs/4.0/layout/grid/
+https://getbootstrap.com/docs/4.1/examples/pricing/
+ *@
 
 <div class="homework-entry card mb-3" @onclick="HandleClick" style="cursor: pointer">
     <div class="card-body">
@@ -16,7 +25,7 @@
             <div class="col-8">
                 <div class="homework-title">@TaskInfo.Title</div>
                 <div
-                    class="homework-subject">@User.Title @User.LastName - @ClassResponse.Subject.Name</div>
+                    class="homework-subject">@User.Title @User.LastName - @SubjectInfo.Name</div>
             </div>
             <div class="col-2 text-right">
                 
@@ -37,11 +46,13 @@
 
     private UserInfo User { get; set; } = null!;
     private SchoolClassResponseInfo ClassResponse { get; set; } = null!;
-    
-    protected override void OnInitialized()
+    private SubjectResponseInfo SubjectInfo { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
     {
-        ClassResponse = TaskInfo.ClassResponse;
-        User = TaskInfo.ClassResponse.Teacher;
+        ClassResponse = TaskInfo.Class;
+        SubjectInfo = await SubjectService.GetSubjectInfoAsync(ClassResponse.SubjectId);
+        User = await TeacherService.GetTeacherInfoAsync(TaskInfo.Class.TeacherId);
         DueDate = TaskInfo.DueDate;
     }
 

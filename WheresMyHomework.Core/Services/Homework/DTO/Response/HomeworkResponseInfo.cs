@@ -9,5 +9,5 @@ public record HomeworkResponseInfo
     public required DateTime SetDate { get; init; }
     
     public required string Description { get; init; }
-    public required SchoolClassResponseInfo ClassResponse { get; init; }
+    public required SchoolClassResponseInfo Class { get; init; }
 }

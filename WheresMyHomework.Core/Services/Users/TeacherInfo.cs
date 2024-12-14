@@ -4,5 +4,4 @@ namespace WheresMyHomework.Core.Services.Users;
 
 public record TeacherInfo : UserInfo
 {
-    public required ICollection<SchoolClassResponseInfo> Classes { get; init; }
 }

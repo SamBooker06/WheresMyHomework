@@ -70,22 +70,12 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             Description = homeworkTask.Description,
             DueDate = homeworkTask.DueDate,
             SetDate = homeworkTask.SetDate,
-            ClassResponse = new SchoolClassResponseInfo
+            Class = new SchoolClassResponseInfo
             {
                 Name = homeworkTask.Class.Name,
                 Id = homeworkTask.Class.Id,
-                Teacher = new UserInfo
-                {
-                    FirstName = homeworkTask.Class.Teacher.FirstName,
-                    LastName = homeworkTask.Class.Teacher.LastName,
-                    Title = homeworkTask.Class.Teacher.Title,
-                    Id = homeworkTask.Class.Teacher.Id,
-                    SchoolId = homeworkTask.Class.Subject.SchoolId
-                },
-                Subject = new SubjectResponseInfo
-                {
-                    Name = homeworkTask.Class.Subject.Name,
-                },
+                TeacherId = homeworkTask.Class.Teacher.Id,
+                SubjectId = homeworkTask.Class.Subject.Id,
             }
         };
     }
@@ -102,17 +92,19 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
         {
             Title = homeworkInfo.Title,
             Id = homeworkInfo.Id,
-            ClassResponse = homeworkInfo.ClassResponse,
+            Class = homeworkInfo.Class,
             Notes = studentHomeworkTask.Notes,
             IsComplete = studentHomeworkTask.IsComplete,
             Description = homeworkInfo.Description,
             DueDate = homeworkInfo.DueDate,
             SetDate = homeworkInfo.SetDate,
+            Priority = studentHomeworkTask.Priority,
             Todos = studentHomeworkTask.Todos
-                .Select(todo => new TodoInfo
+                .Select(todo => new TodoResponseInfo
                 {
                     Description = todo.Description,
-                    IsComplete = todo.IsComplete
+                    IsComplete = todo.IsComplete,
+                    Id = todo.Id
                 }).ToList()
         };
     }
@@ -142,28 +134,20 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
                 Description = st.HomeworkTask.Description,
                 DueDate = st.HomeworkTask.DueDate,
                 SetDate = st.HomeworkTask.SetDate,
-                ClassResponse = new SchoolClassResponseInfo
+                Priority = st.Priority,
+                Class = new SchoolClassResponseInfo
                 {
                     Name = st.HomeworkTask.Class.Name,
                     Id = st.HomeworkTask.Class.Id,
-                    Teacher = new UserInfo
-                    {
-                        FirstName = st.HomeworkTask.Class.Teacher.FirstName,
-                        LastName = st.HomeworkTask.Class.Teacher.LastName,
-                        Title = st.HomeworkTask.Class.Teacher.Title,
-                        Id = st.HomeworkTask.Class.Teacher.Id,
-                        SchoolId = st.HomeworkTask.Class.Subject.SchoolId
-                    },
-                    Subject = new SubjectResponseInfo
-                    {
-                        Name = st.HomeworkTask.Class.Subject.Name,
-                    }
+                    TeacherId = st.HomeworkTask.Class.TeacherId,
+                    SubjectId = st.HomeworkTask.Class.SubjectId,
                 },
                 IsComplete = st.IsComplete,
-                Todos = st.Todos.Select(todo => new TodoInfo
+                Todos = st.Todos.Select(todo => new TodoResponseInfo
                 {
                     Description = todo.Description,
-                    IsComplete = todo.IsComplete
+                    IsComplete = todo.IsComplete,
+                    Id = todo.Id
                 }).ToList()
             }).ToArrayAsync();
     }
@@ -182,22 +166,12 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
                 Description = task.Description,
                 DueDate = task.DueDate,
                 SetDate = task.SetDate,
-                ClassResponse = new SchoolClassResponseInfo
+                Class = new SchoolClassResponseInfo
                 {
                     Name = task.Class.Name,
                     Id = task.Class.Id,
-                    Subject = new SubjectResponseInfo
-                    {
-                        Name = task.Class.Subject.Name,
-                    },
-                    Teacher = new UserInfo
-                    {
-                        FirstName = task.Class.Teacher.FirstName,
-                        LastName = task.Class.Teacher.LastName,
-                        Title = task.Class.Teacher.Title,
-                        Id = task.Class.Teacher.Id,
-                        SchoolId = task.Class.Subject.SchoolId
-                    }
+                    SubjectId = task.Class.Subject.Id,
+                    TeacherId = task.Class.Teacher.Id,
                 }
             }).ToArrayAsync();
     }

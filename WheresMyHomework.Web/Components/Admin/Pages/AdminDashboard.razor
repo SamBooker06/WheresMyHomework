@@ -1,9 +1,11 @@
-﻿@using System.Diagnostics
+﻿@using System.ComponentModel.DataAnnotations
+@using System.Diagnostics
 
+@inject NavigationManager Navigator
 @rendermode InteractiveServer
 
 <h3>Hello, @Info.Title @Info.LastName</h3>
-<button>Create class</button>
+<button @onclick="OnClick">Create class</button>
 
 @code {
     private AdminInfo Info { get; set; } = null!;
@@ -14,6 +16,12 @@
         Debug.Assert(authInfo != null);
 
         Info = await AdminService.GetAdminInfoAsync(authInfo.UserId);
+    }
+
+
+    private void OnClick()
+    {
+        Navigator.NavigateTo("Class/Create");
     }
 
 }

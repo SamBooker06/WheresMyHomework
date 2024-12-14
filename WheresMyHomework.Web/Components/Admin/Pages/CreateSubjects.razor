@@ -1,0 +1,73 @@
+﻿@page "/Subjects/Create"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Diagnostics
+@using WheresMyHomework.Core.Services.SubjectService
+
+@inject ISubjectService SubjectService
+@inject ITeacherService TeacherService
+
+<h3>Create Subject</h3>
+
+
+@if (_hasJustCreated)
+{
+    <p class="alert alert-success">Created subject!</p>
+}
+
+<section>
+    <EditForm Model="Input" method="post" OnValidSubmit="SubmitFormAsync"
+              FormName="CreateSubject">
+        <DataAnnotationsValidator/>
+
+        <div class="form-floating mb-3">
+            <InputText @bind-Value="Input.Name" id="Input.Name" class="form-control"/>
+            <label for="Input.Name" class="form-label">Name</label>
+            <ValidationMessage For="() => Input.Name"/>
+        </div>
+
+        <button class="btn-sm" type="submit">Create subject</button>
+
+    </EditForm>
+</section>
+
+@code {
+
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = new();
+
+    private IEnumerable<SubjectResponseInfo> _subjects = null!;
+    private IEnumerable<TeacherInfo> _teachers = null!;
+    private bool _hasJustCreated;
+
+    private AdminInfo _adminInfo = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authInfo = await AdminAuthService.GetAuthenticatedUserInfoAsync();
+        Debug.Assert(authInfo != null);
+
+        _adminInfo = await AdminService.GetAdminInfoAsync(authInfo.UserId);
+
+        _subjects = await SubjectService.GetSubjectsAsync(_adminInfo.SchoolId);
+        _teachers = (await TeacherService.GetTeachersFromSchoolAsync(_adminInfo.SchoolId)).OrderBy(teacher => teacher.LastName);
+    }
+
+    private async Task SubmitFormAsync()
+    {
+        await SubjectService.CreateSubjectAsync(new SubjectCreateInfo
+        {
+            Name = Input.Name,
+            SchoolId = _adminInfo.SchoolId
+        });
+
+        // Reset form
+        Input = new();
+        _hasJustCreated = true;
+    }
+
+    private class InputModel
+    {
+        [Required, MaxLength(30)] public string Name { get; set; } = string.Empty;
+    }
+    
+}

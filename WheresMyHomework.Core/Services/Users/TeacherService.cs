@@ -7,12 +7,20 @@ namespace WheresMyHomework.Core.Services.Users;
 
 public class TeacherService(ApplicationDbContext context) : ITeacherService
 {
-    public async Task<Teacher> GetTeacherByHomeworkIdAsync(int homeworkId)
+    public async Task<TeacherInfo> GetTeacherByHomeworkIdAsync(int homeworkId)
     {
         return await context.HomeworkTasks.Where(task => task.Id == homeworkId)
             .Include(task => task.Class)
             .ThenInclude(cls => cls.Teacher)
-            .Select(task => task.Class.Teacher).FirstAsync();
+            .Include(task => task.Class.Subject)
+            .Select(task => new TeacherInfo
+            {
+                Id = task.Class.Teacher.Id,
+                FirstName = task.Class.Teacher.FirstName,
+                LastName = task.Class.Teacher.LastName,
+                Title = task.Class.Teacher.Title,
+                SchoolId = task.Class.Subject.SchoolId
+            }).FirstAsync();
     }
 
     public async Task<TeacherInfo> GetTeacherInfoAsync(string teacherId)
@@ -27,27 +35,22 @@ public class TeacherService(ApplicationDbContext context) : ITeacherService
             FirstName = teacher.FirstName,
             LastName = teacher.LastName,
             Title = teacher.Title,
-            SchoolId = teacher.SchoolId,
-            Classes = teacher.Classes.Select(cls => new SchoolClassResponseInfo
-            {
-                Name = cls.Name,
-                Id = cls.Id,
-                Subject = new SubjectResponseInfo
-                {
-                    Name = cls.Subject.Name,
-                },
-                Teacher = new UserInfo
-                {
-                    Id = cls.TeacherId,
-                    FirstName = cls.Teacher.FirstName,
-                    LastName = cls.Teacher.LastName,
-                    Title = cls.Teacher.Title,
-                    SchoolId = cls.Teacher.SchoolId,
-                }
-            }).ToList()
+            SchoolId = teacher.SchoolId
         };
         return teacherInfo;
     }
 
+    public async Task<IEnumerable<TeacherInfo>> GetTeachersFromSchoolAsync(int schoolId)
+    {
+        return await context.Users.OfType<Teacher>().Where(teacher => teacher.SchoolId == schoolId)
+            .Select(teacher => new TeacherInfo
+            {
+                Id = teacher.Id,
+                Title = teacher.Title,
+                FirstName = teacher.FirstName,
+                LastName = teacher.LastName,
+                SchoolId = teacher.SchoolId,
+            }).ToListAsync();
+    }
     
 }

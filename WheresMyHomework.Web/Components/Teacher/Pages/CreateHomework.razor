@@ -1,12 +1,17 @@
 ﻿@page "/Homework/Create"
 @using System.ComponentModel.DataAnnotations
 @using System.Diagnostics
+@using WheresMyHomework.Core.Services.Class
 @using WheresMyHomework.Core.Services.Homework.DTO.Request
 @using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Core.Services.SubjectService
+
+@inject IClassService ClassService
+@inject ISubjectService SubjectService
 
 @if (_hasJustSubmitted)
 {
-    <p>Created homework!</p>
+    <p class="alert alert-success">Created homework!</p>
 }
 
 <section>
@@ -36,9 +41,11 @@
             <InputSelect @bind-Value="Input.ClassId" id="Input.ClassId" class="form-select">
                 @foreach (var cls in Classes)
                 {
-                    <option value="@cls.Id">@cls.Subject.Name - @cls.Name</option>
+                    var subjectName = Subjects.First(subject => subject.Id == cls.SubjectId).Name;
+                    <option value="@cls.Id">@subjectName - @cls.Name</option>
                 }
             </InputSelect>
+            <label for="Input.ClassId">Class</label>
         </div>
 
         <button class="btn-sm" type="submit">Create homework</button>
@@ -50,7 +57,8 @@
     [SupplyParameterFromForm] private HomeworkFormInput Input { get; set; } = new();
     private bool _hasJustSubmitted;
 
-    private ICollection<SchoolClassResponseInfo> Classes { get; set; } = null!;
+    private IEnumerable<SchoolClassResponseInfo> Classes { get; set; } = null!;
+    private IEnumerable<SubjectResponseInfo> Subjects { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,7 +66,9 @@
         Debug.Assert(authInfo != null);
 
         var teacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
-        Classes = teacherInfo.Classes;
+        
+        Classes = await ClassService.GetClassByTeacherAsync(teacherInfo.Id);
+        Subjects = await SubjectService.GetSubjectsAsync(teacherInfo.SchoolId);
     }
 
     private async Task SubmitFormAsync()
@@ -73,6 +83,8 @@
             SetDate = DateTime.Now.Date,
             DueDate = Input.DueDate
         });
+
+        Input = new();
 
     }
 

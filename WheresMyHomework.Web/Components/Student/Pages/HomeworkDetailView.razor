@@ -1,20 +1,128 @@
-﻿@page "/Homework/{Id:int}"
+﻿@using System.ComponentModel.DataAnnotations
 @using System.Diagnostics
 @using WheresMyHomework.Core.Services.Homework.DTO
 @using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Core.Services.SubjectService
+@using WheresMyHomework.Core.Services.Users
 
-<h3>@HomeworkResponseTask.Title</h3>
+@page "/Homework/{Id:int}"
+
+@inject ITeacherService TeacherService
+@inject ISubjectService SubjectService
+
+<div class="container mt-4">
+    <div class="row">
+        <main class="col-md-8">
+            <article class="card">
+                <div class="card-body">
+                    <span class="d-flex align-items-center">
+                        <h1 class="card-title mb-0">@HomeworkInfo.Title</h1>
+                        <button class="btn btn-outline-secondary btn-primary btn-sm mt-2 ms-3"> Mark
+                            as @(HomeworkInfo.IsComplete ? "incomplete" : "complete")</button>
+                    </span>
+                    <h6 class="card-subtitle text-muted">@TeacherInfo.Title @TeacherInfo.LastName -
+                        <span
+                            class="text-primary">@SubjectInfo.Name</span></h6>
+
+                    <div class="mt-3 d-flex flex-column align-items-start">
+                        @* Determine badge from priority *@
+                        <span class="">
+                            <span class="badge bg-success">@HomeworkInfo.Priority Priority</span>
+                            <span
+                                class="badge bg-danger ms-2">@(HomeworkInfo.IsComplete ? "COMPLETE" : "INCOMPLETE")</span>
+                        </span>
+
+                    </div>
+
+                    <div class="mt-3">
+                        <p><strong>Due:</strong> @HomeworkInfo.DueDate.ToString("d")</p>
+                        <p><strong>Set:</strong> @HomeworkInfo.SetDate.ToString("d")</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="mt-3 mb-3 ms-3">@HomeworkInfo.Description</div>
+                    </div>
+                </div>
+            </article>
+        </main>
+
+        <aside class="col-md-4">
+            <section class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">To-do</h5>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var todo in HomeworkInfo.Todos)
+                        {
+                            <li class="list-group-item">
+                                <InputCheckbox Value="@todo.IsComplete"
+                                               @onchange="(e) => UpdateTodo(todo.Id, (bool)(e.Value ?? false))"></InputCheckbox> @todo.Description
+
+                            </li>
+                        }
+                        <li class="list-group-item">
+                            <EditForm Model="_newTodo" OnValidSubmit="AddNewTodo" FormName="AddNewTodo">
+                                <InputText class="form-control" placeholder="Type here to add more"
+                                           @bind-Value="_newTodo.Description"></InputText>
+                            </EditForm>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Notes</h5>
+                    @* TODO: Allow for modifying and HTML markup *@
+                    <InputTextArea @bind-Value="@_notes.Description">@HomeworkInfo.Notes</InputTextArea>
+                </div>
+            </section>
+        </aside>
+
+    </div>
+</div>
 
 @code {
     [Parameter] public int Id { get; init; }
-    public required StudentHomeworkResponseInfo HomeworkResponseTask { get; set; } = null!; 
+    private StudentHomeworkResponseInfo HomeworkInfo { get; set; } = null!;
+    private TeacherInfo TeacherInfo { get; set; } = null!;
+    private SubjectResponseInfo SubjectInfo { get; set; } = null!;
+
+    private NewTodoModel _newTodo = new();
+    private NotesModel _notes = new();
+
+    private ICollection<TodoRequestInfo> newTodos = new List<TodoRequestInfo>();
 
     protected override async Task OnInitializedAsync()
     {
         var student = await StudentAuthService.GetAuthenticatedUserInfoAsync();
         Debug.Assert(student != null);
 
-        HomeworkResponseTask = await HomeworkService.GetStudentHomeworkInfoByIdAsync(Id, student.UserId);
+        HomeworkInfo = await HomeworkService.GetStudentHomeworkInfoByIdAsync(Id, student.UserId);
+        TeacherInfo = await TeacherService.GetTeacherByHomeworkIdAsync(Id);
+        SubjectInfo = await SubjectService.GetSubjectInfoAsync(HomeworkInfo.Class.SubjectId);
+        _notes.Description = HomeworkInfo.Notes;
+    }
+
+    private void UpdateTodo(int todoId, bool isComplete)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void AddNewTodo(EditContext obj)
+    {
+        // throw new NotImplementedException();
+    }
+
+    private class NewTodoModel
+    {
+        [Required] [MaxLength(35)] public string Description { get; set; } = string.Empty;
+
+        public bool IsComplete { get; set; }
+    }
+
+    private class NotesModel
+    {
+        public string Description { get; set; } = string.Empty;
     }
 
 }

@@ -4,7 +4,9 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.EntityFrameworkCore;
 using WheresMyHomework.Core.Services;
 using WheresMyHomework.Core.Services.Auth;
+using WheresMyHomework.Core.Services.Class;
 using WheresMyHomework.Core.Services.Homework;
+using WheresMyHomework.Core.Services.SubjectService;
 using WheresMyHomework.Core.Services.Users;
 using WheresMyHomework.Data;
 using WheresMyHomework.Data.Models.Users;
@@ -60,6 +62,8 @@ builder.Services
 
 // Custom services
 builder.Services.AddScoped<IHomeworkService, HomeworkService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<IClassService, ClassService>();
 
 builder.Services.AddScoped<AdminAuthService>();
 builder.Services.AddScoped<TeacherAuthService>();

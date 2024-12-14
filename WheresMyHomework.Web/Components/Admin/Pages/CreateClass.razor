@@ -1,7 +1,94 @@
 ﻿@page "/Class/Create"
+@using System.ComponentModel.DataAnnotations
+@using System.Diagnostics
+@using WheresMyHomework.Core.Services.Class
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Core.Services.SubjectService
+
+@inject ISubjectService SubjectService
+@inject IClassService ClassService
+@inject ITeacherService TeacherService
 
 <h3>Create Class</h3>
 
+@if (_hasJustCreated)
+{
+    <p class="alert alert-success">Created class!</p>
+}
+<section>
+    <EditForm Model="Input" method="post" OnValidSubmit="SubmitFormAsync" FormName="CreateClass">
+        <DataAnnotationsValidator/>
+
+        <div class="form-floating mb-3">
+            <InputText @bind-Value="Input.Name" id="Input.Name" class="form-control"/>
+            <label for="Input.Name" class="form-label">Name</label>
+            <ValidationMessage For="() => Input.Name"/>
+        </div>
+
+
+        <div class="form-floating">
+            <InputSelect @bind-Value="Input.SubjectId" id="Input.SubjectId" class="form-select">
+                @foreach (var subject in _subjects)
+                {
+                    <option value="@subject.Id">@subject.Name</option>
+                }
+            </InputSelect>
+            <label for="Input.SubjectId">Subject</label>
+        </div>
+
+        <div class="form-floating">
+            <InputSelect @bind-Value="Input.TeacherId" id="Input.TeacherId" class="form-select">
+                @foreach (var teacher in _teachers)
+                {
+                    <option value="@teacher.Id">@teacher.LastName, @teacher.FirstName</option>
+                }
+            </InputSelect>
+            <label for="Input.TeacherId" class="form-label">Teacher</label>
+        </div>
+
+
+        <button class="btn-sm" type="submit">Create class</button>
+
+    </EditForm>
+</section>
+
 @code {
-    
+
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = new();
+
+    private IEnumerable<SubjectResponseInfo> _subjects = null!;
+    private IEnumerable<TeacherInfo> _teachers = null!;
+    private bool _hasJustCreated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authInfo = await AdminAuthService.GetAuthenticatedUserInfoAsync();
+        Debug.Assert(authInfo != null);
+
+        var adminInfo = await AdminService.GetAdminInfoAsync(authInfo.UserId);
+
+        _subjects = await SubjectService.GetSubjectsAsync(adminInfo.SchoolId);
+        _teachers = (await TeacherService.GetTeachersFromSchoolAsync(adminInfo.SchoolId)).OrderBy(teacher => teacher.LastName);
+    }
+
+    private async Task SubmitFormAsync()
+    {
+        await ClassService.CreateClassAsync(new CreateClassInfo
+        {
+            ClassName = Input.Name,
+            SubjectId = Input.SubjectId,
+            TeacherId = Input.TeacherId
+        });
+
+        Input = new();
+        _hasJustCreated = true;
+    }
+
+    private class InputModel
+    {
+        [Required, MaxLength(30)] public string Name { get; set; } = string.Empty;
+        [Required] public int SubjectId { get; set; }
+        [Required] public string TeacherId { get; set; } = string.Empty;
+    }
+
 }
