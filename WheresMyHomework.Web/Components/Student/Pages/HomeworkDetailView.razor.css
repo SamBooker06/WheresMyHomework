@@ -1,0 +1,9 @@
+﻿#notes-container  {
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+#todo-list-container {
+    min-height: 25%;
+    max-height: 70%;
+}

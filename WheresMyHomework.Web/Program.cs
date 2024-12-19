@@ -7,6 +7,7 @@ using WheresMyHomework.Core.Services.Auth;
 using WheresMyHomework.Core.Services.Class;
 using WheresMyHomework.Core.Services.Homework;
 using WheresMyHomework.Core.Services.SubjectService;
+using WheresMyHomework.Core.Services.TodoService;
 using WheresMyHomework.Core.Services.Users;
 using WheresMyHomework.Data;
 using WheresMyHomework.Data.Models.Users;
@@ -72,6 +73,7 @@ builder.Services.AddScoped<StudentAuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<ITodoService, TodoService>();
 
 var app = builder.Build();
 

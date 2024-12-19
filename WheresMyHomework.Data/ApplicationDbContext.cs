@@ -17,6 +17,9 @@ public class ApplicationDbContext(
 
     public required DbSet<HomeworkTask> HomeworkTasks { get; init; }
     public required DbSet<StudentHomeworkTask> StudentHomeworkTasks { get; init; }
+    public required DbSet<Todo> Todos { get; set; }
+    
+    // TODO: Add Todo reference + rename from Todo to Todos
 
     public required DbSet<Message> Messages { get; init; }
 

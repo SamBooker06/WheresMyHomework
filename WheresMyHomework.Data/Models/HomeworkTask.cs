@@ -1,7 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using WheresMyHomework.Data.Models.Users;
 
 namespace WheresMyHomework.Data.Models;
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+internal class LessThanDateAttribute(string comparisonPropertyName) : ValidationAttribute
+{
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    {
+        Debug.Assert(value != null);
+
+        ErrorMessage = ErrorMessageString;
+        var currentValue = (DateTime)value;
+
+        var property = validationContext.ObjectType.GetProperty(comparisonPropertyName);
+        Debug.Assert(property != null);
+        var comparisonValue = (DateTime)property.GetValue(validationContext.ObjectInstance);
+
+        return comparisonValue < currentValue ? new ValidationResult(ErrorMessage) : ValidationResult.Success;
+    }
+}
 
 // This represents a homework post that will be stored in the database
 public class HomeworkTask
@@ -15,7 +34,9 @@ public class HomeworkTask
     public required string Description { get; set; }
 
     public DateTime SetDate { get; set; } = DateTime.Now;
-    public required DateTime DueDate { get; set; } // TODO: Validate this is later than set date
+
+    [LessThanDate("SetDate")]
+    public required DateTime DueDate { get; set; }
 
     [Required] public SchoolClass Class { get; set; } = null!;
     public int ClassId { get; set; }

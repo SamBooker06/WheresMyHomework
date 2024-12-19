@@ -2,7 +2,6 @@
 using WheresMyHomework.Core.Services.Homework.DTO;
 using WheresMyHomework.Core.Services.Homework.DTO.Request;
 using WheresMyHomework.Core.Services.Homework.DTO.Response;
-using WheresMyHomework.Core.Services.Users;
 using WheresMyHomework.Data;
 using WheresMyHomework.Data.Models;
 
@@ -92,6 +91,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
         {
             Title = homeworkInfo.Title,
             Id = homeworkInfo.Id,
+            StudentHomeworkId = studentHomeworkTask.Id,
             Class = homeworkInfo.Class,
             Notes = studentHomeworkTask.Notes,
             IsComplete = studentHomeworkTask.IsComplete,
@@ -130,6 +130,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             {
                 Title = st.HomeworkTask.Title,
                 Id = st.HomeworkTask.Id,
+                StudentHomeworkId = st.HomeworkTask.Id,
                 Notes = st.Notes,
                 Description = st.HomeworkTask.Description,
                 DueDate = st.HomeworkTask.DueDate,
