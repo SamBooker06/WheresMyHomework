@@ -1,0 +1,152 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using WheresMyHomework.Core.Services.Class
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Core.Services.SubjectService
+@using WheresMyHomework.Web.Components.Common
+
+@inject IClassService ClassService
+@inject IStudentService StudentService
+@inject ISubjectService SubjectService
+@inject ILogger<ManageClasses> Logger
+
+@page "/Classes"
+
+@rendermode InteractiveServer
+
+<PageTitle>Manage your classes | WMH</PageTitle>
+
+
+@if (_teacher is not null
+     && _classes is not null
+     && _students is not null
+     && _subjects is not null)
+{
+    <div class="container-fluid">
+        <div class="row">
+            <main class="col-md-6">
+                <article class="card p-3">
+                    <button class="btn btn-primary my-3" @onclick="DisplayClassCreator">Create class</button>
+
+                    <ul class="list-group">
+
+                        @foreach (var cls in _classes)
+                        {
+                            <li class="list-group-item">
+                                @cls.Name
+                            </li>
+                        }
+                    </ul>
+                </article>
+            </main>
+
+            @if (_displayClassCreator)
+            {
+                <aside class="col-md-6">
+                    @if (_hasCreatedClass)
+                    {
+                        <div class="alert alert-success">
+                            <p>Created class!</p>
+                        </div>
+                    }
+
+                    <article class="card p-3">
+                        <h5 class="card-title">Create class</h5>
+
+                        <EditForm FormName="CreateClass" Model="NewClass" OnValidSubmit="CreateNewClassAsync">
+                            <DataAnnotationsValidator/>
+                            <ValidationSummary />
+
+                            <InputText class="form-control" @bind-Value="NewClass.Name">
+                                @* <ValidationMessage>Name must be between 2 and 30 characters</ValidationMessage> *@
+                                Class name
+                            </InputText>
+
+                            <InputSelect class="form-control form-select" TValue="int" @bind-Value="NewClass.SubjectId">
+                                @foreach (var subject in _subjects)
+                                {
+                                    <option value="@subject.Id">@subject.Name</option>
+                                }
+                            </InputSelect>
+
+                            @* TODO: Improve mutli select *@
+                            <MultiSelect TItem="string" Title="Students" Items="_students.Select(info => info.Id)"
+                                         SelectedItems="NewClass.StudentIds" />
+                            
+                            <button class="btn btn-primary" type="submit">Create!</button>
+
+                        </EditForm>
+
+                    </article>
+                </aside>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <p class="text-danger">There was a problem getting your info</p>
+}
+
+@code {
+    private TeacherInfo? _teacher;
+    private IEnumerable<UserInfo>? _students;
+    private IEnumerable<SchoolClassResponseInfo>? _classes;
+    private IEnumerable<SubjectResponseInfo>? _subjects;
+
+    private NewClassModel NewClass { get; set; } = new();
+
+    private bool _hasCreatedClass;
+    private bool _displayClassCreator;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var teacherAuth = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
+        if (teacherAuth is null)
+        {
+            Logger.LogError("TeacherAuth was null. Is the user signed in?");
+            return;
+        }
+
+        _teacher = await TeacherService.GetTeacherInfoAsync(teacherAuth.UserId);
+        _classes = await ClassService.GetClassByTeacherAsync(_teacher.Id);
+        _students = await StudentService.GetStudentInfoBySchoolAsync(_teacher.SchoolId);
+        _subjects = await SubjectService.GetSubjectsAsync(_teacher.SchoolId);
+    }
+
+    private void DisplayClassCreator()
+    {
+        _displayClassCreator = true;
+    }
+
+    private async Task CreateNewClassAsync()
+    {
+        if (_teacher is null)
+        {
+            Logger.LogError("Teacher is null while creating a new class");
+            return;
+        }
+
+        await ClassService.CreateClassAsync(new CreateClassInfo
+        {
+            ClassName = NewClass.Name,
+            SubjectId = NewClass.SubjectId,
+            TeacherId = _teacher.Id,
+            StudentIds = NewClass.StudentIds
+        });
+
+
+        _hasCreatedClass = true;
+        NewClass = new NewClassModel();
+    }
+
+
+    private class NewClassModel
+    {
+        [MinLength(2), MaxLength(15)] public string Name { get; set; } = string.Empty;
+
+        public List<string> StudentIds = [];
+
+        [Required] public int SubjectId { get; set; }
+    }
+
+}

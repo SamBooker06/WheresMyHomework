@@ -5,6 +5,8 @@
 @inject NavigationManager Navigator
 @rendermode InteractiveServer
 
+<PageTitle>View homework | WMH</PageTitle>
+
 @foreach (var task in _homeworkTasks)
 {
     <HomeworkEntry TaskInfo="task" OnClick="RedirectToHomeworkDetailView"/>

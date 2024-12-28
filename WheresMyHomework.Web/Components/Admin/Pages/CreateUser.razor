@@ -1,0 +1,174 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using WheresMyHomework.Data.Models.Users
+
+@page "/CreateUser"
+
+@inject IUserStore<ApplicationUser> UserStore
+@inject UserManager<ApplicationUser> UserManager
+
+@rendermode InteractiveServer
+
+@* TODO: Edit form for creating students and teachers. Create URL for signups with QR code*@
+@* https://www.c-sharpcorner.com/article/create-qr-code-in-blazor-using-asp-net-core/ *@
+@* Send email @ https://mailchimp.com/developer/transactional/guides/quick-start/#create-an-account *@
+
+<main>
+    <div class="card">
+        <h1 class="card-title">Create new user</h1>
+
+        <section class="card-body m-2">
+            <EditForm method="post" class="row gx-3" Model="_userModel" FormName="CreateNewUser"
+                      OnValidSubmit="async () => await CreateNewUserAsync()">
+                <DataAnnotationsValidator/>
+
+                <div class="col-md-2">
+                    <InputSelect class="form-control form-select" TValue="PersonTitle"
+                                 @bind-Value="_userModel.Title">
+                        @foreach (var title in Enum.GetValues<PersonTitle>())
+                        {
+                            <option value="@title">@title</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-4">
+                    <InputText id="first-name-input" class="form-control" @bind-Value="_userModel.FirstName"
+                               placeholder="Joe"/>
+                    <label class="form-label" for="first-name-input">First name</label>
+                </div>
+
+                <div class="col-md-4">
+                    <InputText id="last-name-input" class="form-control" @bind-Value="_userModel.LastName"
+                               placeholder="Bloggs"/>
+                    <label class="form-label" for="last-name-input">Last name</label>
+                </div>
+
+                <div class="col-md-4 form-floating mb-3">
+                    <InputText id="email-input" @bind-Value="_userModel.Email"
+                               class="form-control" placeholder="example@gmail.com" type="email"/>
+                    <label class="form-label" for="email-input">Email address</label>
+
+                </div>
+
+                <InputSelect
+                    class="form-control form-select"
+                    TValue="UserType" @bind-Value="_userModel.UserType">
+                    <option value="@UserType.Admin">Admin</option>
+                    <option value="@UserType.Teacher">Teacher</option>
+                    <option value="@UserType.Student">Student</option>
+                </InputSelect>
+
+                <button class="btn btn-primary" type="submit">Create user</button>
+            </EditForm>
+        </section>
+    </div>
+</main>
+
+
+@code {
+
+    private enum UserType
+    {
+        Admin,
+        Teacher,
+        Student
+    }
+
+    private UserModel _userModel = new();
+
+    private class UserModel
+    {
+        [Required] public UserType UserType { get; set; } = UserType.Student;
+        [Required] public PersonTitle Title { get; set; } = PersonTitle.Mr;
+        [Required, EmailAddress] public string Email { get; set; } = string.Empty;
+
+        [Required, MinLength(2), MaxLength(35)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required, MinLength(2), MaxLength(35)]
+        public string LastName { get; set; } = string.Empty;
+    }
+
+
+    private Admin CreateAdmin(AdminInfo adminInfo)
+    {
+        return new Admin
+        {
+            FirstName = _userModel.FirstName,
+            LastName = _userModel.LastName,
+            Email = _userModel.Email,
+            Title = _userModel.Title,
+            SchoolId = adminInfo.SchoolId,
+            EmailConfirmed = true,
+        };
+    }
+
+    // Creates a new user with no password
+    private async Task CreateNewUserAsync()
+    {
+        var adminAuth = await AdminAuthService.GetAuthenticatedUserInfoAsync();
+        if (adminAuth is null) return;
+
+        var adminInfo = await AdminService.GetAdminInfoAsync(adminAuth.UserId);
+
+        // TODO: Add to classes and subjects
+
+        ApplicationUser user;
+        switch (_userModel.UserType)
+        {
+            case UserType.Admin:
+                user = CreateAdmin(adminInfo);
+                break;
+            case UserType.Teacher:
+                user = CreateTeacher(adminInfo);
+                break;
+            case UserType.Student:
+                user = CreateStudent(adminInfo);
+                break;
+            default:
+                throw new ApplicationException($"Unexpected user type, {_userModel.UserType}");
+        }
+
+        var username = _userModel.Email.Split('@')[0];
+        await UserStore.SetUserNameAsync(user, username, CancellationToken.None);
+        var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+        await emailStore.SetEmailAsync(user, _userModel.Email, CancellationToken.None);
+
+        // var password = GeneratePassword();
+
+        // Create a user without a password
+        var result = await UserManager.CreateAsync(user);
+        if (!result.Succeeded) return;
+        await UserManager.AddToRoleAsync(user, _userModel.UserType.ToString());
+        _userModel = new UserModel(); // Reset form
+    }
+
+    private Student CreateStudent(AdminInfo adminInfo)
+    {
+        return new Student
+        {
+            FirstName = _userModel.FirstName,
+            LastName = _userModel.LastName,
+            Email = _userModel.Email,
+            Title = _userModel.Title,
+            SchoolId = adminInfo.SchoolId,
+            EmailConfirmed = true,
+        };
+    }
+
+    private Teacher CreateTeacher(AdminInfo adminInfo)
+    {
+        return new Teacher
+        {
+            FirstName = _userModel.FirstName,
+            LastName = _userModel.LastName,
+            Email = _userModel.Email,
+            Title = _userModel.Title,
+            SchoolId = adminInfo.SchoolId,
+            EmailConfirmed = true,
+        };
+    }
+
+
+}

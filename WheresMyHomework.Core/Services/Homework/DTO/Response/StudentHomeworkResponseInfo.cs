@@ -9,4 +9,5 @@ public record StudentHomeworkResponseInfo : HomeworkResponseInfo
     public required string Notes { get; init; }
     public required bool IsComplete { get; init; }
     public required Priority Priority { get; init; }
+    public required ICollection<TagResponseInfo> Tags { get; init; }
 }

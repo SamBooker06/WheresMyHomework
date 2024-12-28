@@ -9,7 +9,6 @@ namespace WheresMyHomework.Core.Services.Homework;
 public interface IHomeworkService
 {
     Task CreateHomeworkAsync(HomeworkRequestInfo info);
-    Task UpdateHomeworkAsync(HomeworkTask homeworkTask);
     Task DeleteHomeworkByIdAsync(int homeworkId);
     Task<HomeworkResponseInfo> GetHomeworkInfoByIdAsync(int homeworkId);
     Task<StudentHomeworkResponseInfo> GetStudentHomeworkInfoByIdAsync(int homeworkId, string studentId);
@@ -18,6 +17,9 @@ public interface IHomeworkService
         StudentHomeworkFilter? filter=null);
 
     Task<ICollection<HomeworkResponseInfo>> GetHomeworkInfoByClassIdAsync(int classId);
+    Task<bool> UpdateNotesAsync(int studentHomeworkId, string newNotes);
+    Task<bool> UpdateHomeworkCompletionStatusAsync(int studentHomeworkId, bool isComplete);
+    Task<bool> UpdateHomeworkPriorityAsync(int studentHomeworkId, Priority priority);
 }
 
 // TODO: Make UI

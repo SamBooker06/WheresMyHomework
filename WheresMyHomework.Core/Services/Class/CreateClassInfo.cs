@@ -8,5 +8,5 @@ public record CreateClassInfo
     
     public required int SubjectId { get; set; }
     
-    public ICollection<int> StudentIds { get; set; } = new List<int>();
+    public ICollection<string> StudentIds { get; set; } = new List<string>();
 }

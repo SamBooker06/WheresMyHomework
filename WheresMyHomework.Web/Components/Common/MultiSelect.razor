@@ -1,0 +1,56 @@
+﻿@typeparam TItem
+
+@rendermode InteractiveServer
+
+<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" @onclick="ToggleDropdown">
+        @Title
+    </button>
+    <div class="dropdown-menu @DropdownClass">
+        @foreach (var item in Items)
+        {
+            <div class="form-check dropdown-item px-4 ">
+                <input class="form-check-input" type="checkbox" id="@GetItemId(item)" @onchange="() => ToggleSelection(item)" checked="@IsSelected(item)" />
+                <label class="form-check-label" for="@GetItemId(item)">
+                    @item!.ToString()
+                </label>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Select Items";
+    [Parameter] public IEnumerable<TItem> Items { get; set; } = [];
+    [Parameter] public ICollection<TItem> SelectedItems { get; set; } = [];
+    
+    private bool _isOpen;
+    private string DropdownClass => _isOpen ? "show" : string.Empty;
+
+    private void ToggleDropdown()
+    {
+        _isOpen = !_isOpen;
+    }
+
+    private void ToggleSelection(TItem item)
+    {
+        if (SelectedItems.Contains(item))
+        {
+            SelectedItems.Remove(item);
+        }
+        else
+        {
+            SelectedItems.Add(item);
+        }
+    }
+
+    private bool IsSelected(TItem item)
+    {
+        return SelectedItems.Contains(item);
+    }
+
+    private string GetItemId(TItem item)
+    {
+        return $"{item!.ToString()}-checkbox";
+    }
+}

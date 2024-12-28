@@ -1,4 +1,4 @@
-﻿#notes-container  {
+﻿#notes-container {
     overflow-y: auto;
     max-height: 100%;
 }
@@ -6,4 +6,13 @@
 #todo-list-container {
     min-height: 25%;
     max-height: 70%;
+}
+
+.empty-button {
+    background: none;
+    border: none;
+}
+
+.empty-button:after {
+    display: none;
 }

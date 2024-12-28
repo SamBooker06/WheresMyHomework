@@ -1,15 +1,16 @@
 ﻿@using System.Diagnostics
-@using WheresMyHomework.Core.Services.Users
 @inject NavigationManager Navigator
 
 
 @rendermode InteractiveServer
+
 <h1>Hello, @TeacherInfo.Title @TeacherInfo.LastName</h1>
 <h3>Welcome to the teacher dashboard</h3>
 
 
-<button @onclick="GoToSetHomework">Set homework</button>
-<button @onclick="GoToViewHomework">View homework</button>
+<button class="btn btn-outline-primary" @onclick="GoToSetHomework">Set homework</button>
+<button class="btn btn-outline-primary" @onclick="GoToViewHomework">View homework</button>
+<button class="btn btn-outline-primary" @onclick="GoToClassManagement">Manage your classes</button>
 
 @code {
     private TeacherInfo TeacherInfo { get; set; } = null!;
@@ -30,6 +31,11 @@
         Debug.Assert(authInfo != null);
 
         TeacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
+    }
+
+    private void GoToClassManagement()
+    {
+        Navigator.NavigateTo("Classes");
     }
 
 }

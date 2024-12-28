@@ -11,8 +11,8 @@ using WheresMyHomework.Data;
 namespace WheresMyHomework.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241130144736_RemoveRedundantIds")]
-    partial class RemoveRedundantIds
+    [Migration("20241223185526_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -148,10 +148,46 @@ namespace WheresMyHomework.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("SchoolClassStudent", b =>
+                {
+                    b.Property<int>("SchoolClassesId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StudentsId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("SchoolClassesId", "StudentsId");
+
+                    b.HasIndex("StudentsId");
+
+                    b.ToTable("SchoolClassStudent");
+                });
+
+            modelBuilder.Entity("StudentHomeworkTaskTag", b =>
+                {
+                    b.Property<int>("StudentHomeworkTasksId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TagsName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TagsStudentId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("StudentHomeworkTasksId", "TagsName", "TagsStudentId");
+
+                    b.HasIndex("TagsName", "TagsStudentId");
+
+                    b.ToTable("StudentHomeworkTaskTag");
+                });
+
             modelBuilder.Entity("WheresMyHomework.Data.Models.HomeworkTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ClassId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
@@ -165,10 +201,6 @@ namespace WheresMyHomework.Data.Migrations
                     b.Property<DateTime>("SetDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("TeacherId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -176,7 +208,7 @@ namespace WheresMyHomework.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TeacherId");
+                    b.HasIndex("ClassId");
 
                     b.ToTable("HomeworkTasks");
                 });
@@ -240,11 +272,19 @@ namespace WheresMyHomework.Data.Migrations
                         .HasColumnType("varchar(20)");
 
                     b.Property<int>("SubjectId")
+                        .HasMaxLength(36)
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("TeacherId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("SubjectId");
+
+                    b.HasIndex("TeacherId");
 
                     b.ToTable("Classes");
                 });
@@ -258,6 +298,9 @@ namespace WheresMyHomework.Data.Migrations
                     b.Property<int>("HomeworkTaskId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Notes")
                         .IsRequired()
                         .HasMaxLength(300)
@@ -268,6 +311,7 @@ namespace WheresMyHomework.Data.Migrations
 
                     b.Property<string>("StudentId")
                         .IsRequired()
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -298,6 +342,47 @@ namespace WheresMyHomework.Data.Migrations
                     b.HasIndex("SchoolId");
 
                     b.ToTable("Subjects");
+                });
+
+            modelBuilder.Entity("WheresMyHomework.Data.Models.Tag", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StudentId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Name", "StudentId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("WheresMyHomework.Data.Models.Todo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StudentHomeworkTaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentHomeworkTaskId");
+
+                    b.ToTable("Todos");
                 });
 
             modelBuilder.Entity("WheresMyHomework.Data.Models.Users.ApplicationUser", b =>
@@ -463,15 +548,45 @@ namespace WheresMyHomework.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("WheresMyHomework.Data.Models.HomeworkTask", b =>
+            modelBuilder.Entity("SchoolClassStudent", b =>
                 {
-                    b.HasOne("WheresMyHomework.Data.Models.Users.Teacher", "Teacher")
+                    b.HasOne("WheresMyHomework.Data.Models.SchoolClass", null)
                         .WithMany()
-                        .HasForeignKey("TeacherId")
+                        .HasForeignKey("SchoolClassesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Teacher");
+                    b.HasOne("WheresMyHomework.Data.Models.Users.Student", null)
+                        .WithMany()
+                        .HasForeignKey("StudentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StudentHomeworkTaskTag", b =>
+                {
+                    b.HasOne("WheresMyHomework.Data.Models.StudentHomeworkTask", null)
+                        .WithMany()
+                        .HasForeignKey("StudentHomeworkTasksId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WheresMyHomework.Data.Models.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsName", "TagsStudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WheresMyHomework.Data.Models.HomeworkTask", b =>
+                {
+                    b.HasOne("WheresMyHomework.Data.Models.SchoolClass", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Class");
                 });
 
             modelBuilder.Entity("WheresMyHomework.Data.Models.Message", b =>
@@ -501,13 +616,21 @@ namespace WheresMyHomework.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("WheresMyHomework.Data.Models.Users.Teacher", "Teacher")
+                        .WithMany("Classes")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Subject");
+
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("WheresMyHomework.Data.Models.StudentHomeworkTask", b =>
                 {
                     b.HasOne("WheresMyHomework.Data.Models.HomeworkTask", "HomeworkTask")
-                        .WithMany()
+                        .WithMany("StudentHomeworkTasks")
                         .HasForeignKey("HomeworkTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -534,6 +657,28 @@ namespace WheresMyHomework.Data.Migrations
                     b.Navigation("School");
                 });
 
+            modelBuilder.Entity("WheresMyHomework.Data.Models.Tag", b =>
+                {
+                    b.HasOne("WheresMyHomework.Data.Models.Users.Student", "Student")
+                        .WithMany("TaskTags")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("WheresMyHomework.Data.Models.Todo", b =>
+                {
+                    b.HasOne("WheresMyHomework.Data.Models.StudentHomeworkTask", "StudentHomeworkTask")
+                        .WithMany("Todos")
+                        .HasForeignKey("StudentHomeworkTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StudentHomeworkTask");
+                });
+
             modelBuilder.Entity("WheresMyHomework.Data.Models.Users.ApplicationUser", b =>
                 {
                     b.HasOne("WheresMyHomework.Data.Models.School", "School")
@@ -543,6 +688,26 @@ namespace WheresMyHomework.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("School");
+                });
+
+            modelBuilder.Entity("WheresMyHomework.Data.Models.HomeworkTask", b =>
+                {
+                    b.Navigation("StudentHomeworkTasks");
+                });
+
+            modelBuilder.Entity("WheresMyHomework.Data.Models.StudentHomeworkTask", b =>
+                {
+                    b.Navigation("Todos");
+                });
+
+            modelBuilder.Entity("WheresMyHomework.Data.Models.Users.Student", b =>
+                {
+                    b.Navigation("TaskTags");
+                });
+
+            modelBuilder.Entity("WheresMyHomework.Data.Models.Users.Teacher", b =>
+                {
+                    b.Navigation("Classes");
                 });
 #pragma warning restore 612, 618
         }

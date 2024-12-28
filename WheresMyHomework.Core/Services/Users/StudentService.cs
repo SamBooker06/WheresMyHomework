@@ -7,20 +7,32 @@ namespace WheresMyHomework.Core.Services.Users;
 
 public class StudentService(ApplicationDbContext context) : IStudentService
 {
-    public async Task<Student?> GetStudentByIdAsync(string studentId)
+    public async Task<UserInfo> GetStudentInfoAsync(string studentId)
     {
-        return await context.FindAsync<Student>(studentId);
+        return await context.Users.OfType<Student>()
+            .Where(student => student.Id == studentId)
+            .Select(student => new UserInfo
+            {
+                FirstName = student.FirstName,
+                LastName = student.LastName,
+                Id = student.Id,
+                Title = student.Title,
+                SchoolId = student.SchoolId,
+            }).FirstAsync();
     }
 
-    public async Task<ICollection<Student>> GetStudentsByTeacherAsync(Teacher teacher)
+    public async Task<ICollection<UserInfo>> GetStudentInfoBySchoolAsync(int schoolId)
     {
-        // Gets all students 
-        // Where they have any classes with that teacher
-        // And then removes duplicate results
         return await context.Users.OfType<Student>()
-            .Where(student => student.SchoolClasses
-                .Any(cls => cls.Teacher == teacher))
-            .Distinct()
+            .Where(student => student.SchoolId == schoolId)
+            .Select(student => new UserInfo
+            {
+                FirstName = student.FirstName,
+                LastName = student.LastName,
+                Id = student.Id,
+                Title = student.Title,
+                SchoolId = student.SchoolId,
+            })
             .ToListAsync();
     }
 

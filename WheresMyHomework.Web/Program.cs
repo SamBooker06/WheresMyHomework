@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.EntityFrameworkCore;
-using WheresMyHomework.Core.Services;
+using MudBlazor.Services;
 using WheresMyHomework.Core.Services.Auth;
 using WheresMyHomework.Core.Services.Class;
 using WheresMyHomework.Core.Services.Homework;
 using WheresMyHomework.Core.Services.SubjectService;
+using WheresMyHomework.Core.Services.TagService;
 using WheresMyHomework.Core.Services.TodoService;
 using WheresMyHomework.Core.Services.Users;
 using WheresMyHomework.Data;
@@ -62,6 +62,8 @@ builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 // Custom services
+// builder.Services.AddMudServices();
+
 builder.Services.AddScoped<IHomeworkService, HomeworkService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IClassService, ClassService>();
@@ -73,7 +75,9 @@ builder.Services.AddScoped<StudentAuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+
 builder.Services.AddScoped<ITodoService, TodoService>();
+builder.Services.AddScoped<ITagService, TagService>();
 
 var app = builder.Build();
 
@@ -100,6 +104,7 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
 
 await using (var scope = app.Services.CreateAsyncScope())
 {

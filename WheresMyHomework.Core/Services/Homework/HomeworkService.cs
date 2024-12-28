@@ -7,6 +7,7 @@ using WheresMyHomework.Data.Models;
 
 namespace WheresMyHomework.Core.Services.Homework;
 
+// TODO: Move to StudentHomeworkService
 public class HomeworkService(ApplicationDbContext context) : IHomeworkService
 {
     public async Task CreateHomeworkAsync(HomeworkRequestInfo info)
@@ -47,13 +48,6 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
         await context.SaveChangesAsync();
     }
 
-    // TODO: Move to an update info record
-    public async Task UpdateHomeworkAsync(HomeworkTask homeworkTask)
-    {
-        context.HomeworkTasks.Update(homeworkTask);
-        await context.SaveChangesAsync();
-    }
-
     public async Task<HomeworkResponseInfo> GetHomeworkInfoByIdAsync(int homeworkId)
     {
         var homeworkTask = await context.HomeworkTasks.Include(task => task.Class)
@@ -85,6 +79,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
         var studentHomeworkTask = await context.StudentHomeworkTasks
             .Where(task => task.Student.Id == studentId && task.HomeworkTask.Id == homeworkId)
             .Include(studentHomeworkTask => studentHomeworkTask.Todos)
+            .Include(studentHomeworkTask => studentHomeworkTask.Tags)
             .FirstAsync();
 
         return new StudentHomeworkResponseInfo
@@ -99,6 +94,11 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             DueDate = homeworkInfo.DueDate,
             SetDate = homeworkInfo.SetDate,
             Priority = studentHomeworkTask.Priority,
+            Tags = studentHomeworkTask.Tags.Select(tag => new TagResponseInfo
+            {
+                Name = tag.Name,
+                StudentId = studentHomeworkTask.StudentId,
+            }).ToList(),
             Todos = studentHomeworkTask.Todos
                 .Select(todo => new TodoResponseInfo
                 {
@@ -112,7 +112,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
     public async Task<ICollection<StudentHomeworkResponseInfo>> GetStudentHomeworkAsync(string studentId,
         StudentHomeworkFilter? filter = null)
     {
-        return await context.StudentHomeworkTasks
+        var response = await context.StudentHomeworkTasks
             .Where(task => task.Student.Id == studentId)
             .Where(task => filter == null || // If there is a filter
                            filter.Title == null ||
@@ -126,6 +126,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             .ThenInclude(task => task.Teacher)
             .Include(st => st.HomeworkTask.Class.Subject)
             .Include(task => task.Todos)
+            .Include(st => st.Tags)
             .Select(st => new StudentHomeworkResponseInfo
             {
                 Title = st.HomeworkTask.Title,
@@ -136,6 +137,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
                 DueDate = st.HomeworkTask.DueDate,
                 SetDate = st.HomeworkTask.SetDate,
                 Priority = st.Priority,
+                Tags = new List<TagResponseInfo> { },
                 Class = new SchoolClassResponseInfo
                 {
                     Name = st.HomeworkTask.Class.Name,
@@ -151,6 +153,20 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
                     Id = todo.Id
                 }).ToList()
             }).ToArrayAsync();
+        
+        // This cannot be combined into above in sqlite((
+        foreach (var studentTask in response)
+        {
+            var tags = await context.Tags.Where(tag => tag.StudentId == studentId).Select(tag =>
+                new TagResponseInfo
+                {
+                    Name = tag.Name,
+                    StudentId = studentId
+                }).ToListAsync();
+            tags.ForEach(tag => studentTask.Tags.Add(tag));
+        }
+        
+        return response;
     }
 
     public async Task<ICollection<HomeworkResponseInfo>> GetHomeworkInfoByClassIdAsync(int classId)
@@ -176,4 +192,40 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
                 }
             }).ToArrayAsync();
     }
+
+    public async Task<bool> UpdateNotesAsync(int studentHomeworkId, string newNotes)
+    {
+        var task = await context.StudentHomeworkTasks.FindAsync(studentHomeworkId);
+        if (task is null) return false;
+
+        task.Notes = newNotes;
+
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> UpdateHomeworkCompletionStatusAsync(int studentHomeworkId, bool isComplete)
+    {
+        var task = await context.StudentHomeworkTasks.FindAsync(studentHomeworkId);
+        if (task is null) return false;
+
+        task.IsComplete = isComplete;
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> UpdateHomeworkPriorityAsync(int studentHomeworkId, Priority priority)
+    {
+        var homeworkTask = await context.StudentHomeworkTasks.FindAsync(studentHomeworkId);
+        if (homeworkTask is null) return false;
+
+        homeworkTask.Priority = priority;
+        return await context.SaveChangesAsync() > 0;
+    }
 }
+
+// Where(task => filter == null || // If there is a filter
+//               filter.Title == null ||
+//               filter.Title == string.Empty || // and the title is not empty
+//               ((filter.ExactMatch && // If exact match
+//                 task.HomeworkTask.Title == filter.Title) || // else
+//                task.HomeworkTask.Title.Contains(filter.Title)) &&
+//               filter.Priorities.Contains(task.Priority)) // Check if is of correct priority

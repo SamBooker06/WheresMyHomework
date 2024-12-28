@@ -8,16 +8,16 @@ public class ApplicationUser : IdentityUser
 {
     [Required, MaxLength(50), MinLength(3)]
     [Column(TypeName = "varchar(50)")]
-    public required string FirstName { get; set; }
+    public string FirstName { get; set; } = string.Empty;
 
     [Required, MaxLength(50), MinLength(3)]
     [Column(TypeName = "varchar(50)")]
-    public required string LastName { get; set; }
+    public string LastName { get; set; } = string.Empty;
 
-    [Required] public required School School { get; set; }
+    [Required] public School? School { get; set; }
     public int SchoolId { get; set; }
 
-    [Required] public required PersonTitle Title { get; set; }
+    [Required] public PersonTitle Title { get; set; }
 }
 
 public enum PersonTitle

@@ -17,6 +17,12 @@ else if (_isAdmin)
     <AdminDashboard/>
 }
 
+else
+{
+    <p>Already have an account? <a href="/Account/Login">Login</a> </p>
+    <p>Or <a href="/Join">Sign up</a></p>
+}
+
 @code {
     private bool _isStudent;
     private bool _isTeacher;
@@ -29,7 +35,7 @@ else if (_isAdmin)
         _isAdmin = await AdminAuthService.IsAuthenticatedAsync();
 
         // This needs to go here otherwise throws NavigationError (bug) - https://github.com/aspnet/AspNetCore/issues/13582
-        if (!(_isStudent || _isTeacher || _isAdmin)) Navigator.NavigateTo("Account/Login");
+        // if (!(_isStudent || _isTeacher || _isAdmin)) Navigator.NavigateTo("Account/Login");
     }
 
 }

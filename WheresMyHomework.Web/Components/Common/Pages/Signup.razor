@@ -1,0 +1,107 @@
+﻿@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigator
+
+@page "/Join"
+
+<section>
+    <h1>Hello,</h1>
+
+    <h3>Your school should have already given you an email</h3>
+</section>
+
+<main class="card">
+    <div class="card-body">
+        @if (!_alreadyExists)
+        {
+            <EditForm method="post" Model="SignupInfoModel" FormName="Signup" Enhance="@true"
+                      OnValidSubmit="async () => await SignupAsync()">
+                <ValidationSummary/>
+
+                <div class="form-floating">
+                    <InputText readonly="@SignupInfoModel.HasSignedUp" id="email-input" class="form-control"
+                               placeholder="example@gmail.com"
+                               @bind-Value="SignupInfoModel.Email"/>
+                    <label class="form-label" for="email-input">Email address</label>
+                </div>
+
+                @* This is needed to persist whether the user has already signed up *@
+                <InputCheckbox hidden @bind-Value="SignupInfoModel.HasSignedUp"/>
+
+                @if (!SignupInfoModel.HasSignedUp)
+                {
+                    <button class="btn btn-primary" type="submit">Sign up!</button>
+                }
+                else
+                {
+                    <InputText autofocus type="password" id="password-input" class="form-control"
+                               placeholder=""
+                               @bind-Value="SignupInfoModel.Password"/>
+                    <label class="form-label" for="password-input">Password</label>
+
+                    <button class="btn btn-primary" type="submit">Confirm password</button>
+                }
+            </EditForm>
+        }
+        else
+        {
+            <p class="text-info">This account has already been created</p>
+        }
+    </div>
+</main>
+
+@code {
+    [SupplyParameterFromForm] private SignupModel SignupInfoModel { get; set; } = new();
+
+    private bool _alreadyExists;
+
+    private class SignupModel
+    {
+        [Required, EmailAddress] public string Email { get; set; } = string.Empty;
+
+        [Required, PasswordPropertyText, MaxLength(36)]
+        public string Password { get; set; } = string.Empty;
+
+        public bool HasSignedUp { get; set; }
+    }
+
+    private async Task<bool> SignupAsync()
+    {
+        var user = await UserManager.FindByEmailAsync(SignupInfoModel.Email);
+        if (user is null) return false;
+
+        if (SignupInfoModel.HasSignedUp)
+        {
+            var success = await ChangePasswordAsync(user);
+            if (!success) return false;
+
+            var result = await SignInManager.PasswordSignInAsync(user, SignupInfoModel.Password, true, false);
+            if (!result.Succeeded) return false;
+
+            Navigator.Refresh();
+        }
+
+        if (await UserManager.HasPasswordAsync(user))
+        {
+            _alreadyExists = true;
+            return false;
+        }
+
+        SignupInfoModel.HasSignedUp = true;
+
+        return true;
+    }
+
+    private async Task<bool> ChangePasswordAsync(ApplicationUser user)
+    {
+        var resetToken = await UserManager.GeneratePasswordResetTokenAsync(user);
+        var result = await UserManager.ResetPasswordAsync(user, resetToken, SignupInfoModel.Password);
+
+        return result.Succeeded;
+    }
+
+}
