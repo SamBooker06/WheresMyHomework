@@ -1,18 +1,19 @@
-﻿@typeparam TItem
+﻿@typeparam TItem where TItem : notnull
 
-@rendermode InteractiveServer
-
-<div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle" type="button" @onclick="ToggleDropdown">
+<div class="dropdown @CssClass">
+    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" @onclick="ToggleDropdown">
         @Title
     </button>
-    <div class="dropdown-menu @DropdownClass">
+    <div class="dropdown-menu w-100 @DropdownClass overflow-y-scroll" style=@(MaxHeight is null ? "" : $"max-height: {MaxHeight}rem;")>
         @foreach (var item in Items)
         {
-            <div class="form-check dropdown-item px-4 ">
-                <input class="form-check-input" type="checkbox" id="@GetItemId(item)" @onchange="() => ToggleSelection(item)" checked="@IsSelected(item)" />
-                <label class="form-check-label" for="@GetItemId(item)">
-                    @item!.ToString()
+            <div class="dropdown-item" @onclick="() => ToggleSelection(item)">
+                <input class="form-check-input px-1" type="checkbox" id="@GetItemId(item)" checked="@IsSelected(item)"
+                       @onclick:preventDefault="true"/>
+
+                <label class="form-check-label ps-2" for="@GetItemId(item)" style="user-select: none;"
+                       @onclick:preventDefault="true">
+                    @ItemTransformer(item)
                 </label>
             </div>
         }
@@ -23,7 +24,11 @@
     [Parameter] public string Title { get; set; } = "Select Items";
     [Parameter] public IEnumerable<TItem> Items { get; set; } = [];
     [Parameter] public ICollection<TItem> SelectedItems { get; set; } = [];
-    
+    [Parameter] public Func<TItem, string> ItemTransformer { get; set; } = item => item.ToString() ?? string.Empty;
+    [Parameter] public int? MaxHeight { get; set; }
+
+    [Parameter] public string CssClass { get; set; } = string.Empty;
+
     private bool _isOpen;
     private string DropdownClass => _isOpen ? "show" : string.Empty;
 
@@ -42,6 +47,8 @@
         {
             SelectedItems.Add(item);
         }
+
+        StateHasChanged();
     }
 
     private bool IsSelected(TItem item)
@@ -51,6 +58,7 @@
 
     private string GetItemId(TItem item)
     {
-        return $"{item!.ToString()}-checkbox";
+        return $"{item.ToString()}-checkbox";
     }
+
 }

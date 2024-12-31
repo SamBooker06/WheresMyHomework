@@ -13,7 +13,7 @@ public class SchoolClass
     public required string Name { get; set; }
 
     [Required] public Subject Subject { get; set; } = null!;
-    [ForeignKey("SubjectId"), MaxLength(36)]
+    [ForeignKey("SubjectId")]
     [Required] public int SubjectId { get; set; }
     [Required] public Teacher Teacher { get; set; } = null!;
     

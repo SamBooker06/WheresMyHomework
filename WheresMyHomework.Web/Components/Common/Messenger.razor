@@ -1,0 +1,111 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using WheresMyHomework.Core.Services.MessagingService
+@using WheresMyHomework.Core.Services.Users
+
+@inject IMessagingService MessagingService
+@inject IJSRuntime JS
+
+@rendermode InteractiveServer
+
+<script>
+    function scrollToButton() {
+        const newMessageButton = document.getElementById("new-message-button");
+        const messageContainer = document.getElementById("message-container");
+        
+        const buttonY = newMessageButton.getBoundingClientRect().y;
+        const containerY = messageContainer.getBoundingClientRect().y;
+
+        messageContainer.scrollTop += buttonY - containerY
+    }
+</script>
+
+@if (_messages is not null)
+{
+    <h4 class="text-primary">Messages</h4>
+    <div class="container py-2 list-group overflow-y-scroll list-group-flush" id="message-container">
+        @foreach (var message in _messages)
+        {
+            <div class="@GetCssAlignment(message.SenderId) list-group-item w-25 mb-2 card">
+                <p class="d-inline text-secondary-emphasis ">@message.Timestamp.ToString("g")</p>
+                <p class="d-inline">@message.Content</p>
+            </div>
+        }
+        <hr/>
+        <div class="d-flex align-items-center flex-column">
+            <EditForm FormName="NewMessage" Model="_newMessage" OnValidSubmit="SendNewMessageAsync"
+                      class="form-floating d-inline-flex align-items-center w-75 flex-column">
+                <ValidationSummary/>
+                <InputText id="new-message-input" class="form-control" @bind-Value="_newMessage.Content"/>
+                <label for="new-message-input" class="form-label">New message</label>
+
+                <button class="btn btn-primary my-2" id="new-message-button" type="submit">Send message</button>
+            </EditForm>
+
+        </div>
+    </div>
+}
+else
+{
+    <h5 class="text-danger">There was a problem getting your messages</h5>
+}
+
+@code {
+
+    [Parameter, EditorRequired] public required UserInfo Sender { get; set; }
+
+    [Parameter, EditorRequired] public required UserInfo Receiver { get; set; }
+
+    private MessageModel _newMessage = new();
+
+    private ICollection<MessageResponse>? _messages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _messages = new List<MessageResponse>(await MessagingService.GetChatHistoryAsync(Sender.Id, Receiver.Id));
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender) await JS.InvokeVoidAsync("scrollToButton");
+    }
+
+    private string GetCssAlignment(string senderId)
+    {
+        return senderId == Sender.Id ? "text-end align-self-end" : string.Empty;
+    }
+
+    private async Task SendNewMessageAsync(EditContext arg)
+    {
+        if (_messages is null) return;
+
+        _messages.Add(new MessageResponse
+        {
+            Content = _newMessage.Content,
+            Timestamp = _newMessage.Timestamp,
+            ReceiverId = Receiver.Id,
+            SenderId = Sender.Id
+        });
+
+        await MessagingService.SendMessageAsync(new MessageRequest
+        {
+            SenderId = Sender.Id,
+            ReceiverId = Receiver.Id,
+            Content = _newMessage.Content
+        });
+
+        _newMessage = new MessageModel();
+
+        await JS.InvokeVoidAsync("scrollToButton");
+
+    }
+
+    private class MessageModel
+    {
+        [Required, Length(1, 500)] public string Content { get; set; } = string.Empty;
+
+        public DateTime Timestamp => DateTime.Now;
+    }
+
+}

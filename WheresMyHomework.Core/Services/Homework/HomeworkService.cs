@@ -112,15 +112,8 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
     public async Task<ICollection<StudentHomeworkResponseInfo>> GetStudentHomeworkAsync(string studentId,
         StudentHomeworkFilter? filter = null)
     {
-        var response = await context.StudentHomeworkTasks
+        var query = context.StudentHomeworkTasks
             .Where(task => task.Student.Id == studentId)
-            .Where(task => filter == null || // If there is a filter
-                           filter.Title == null ||
-                           filter.Title == string.Empty || // and the title is not empty
-                           ((filter.ExactMatch && // If exact match
-                             task.HomeworkTask.Title == filter.Title) || // else
-                            task.HomeworkTask.Title.Contains(filter.Title)) &&
-                           filter.Priorities.Contains(task.Priority)) // Check if is of correct priority
             .Include(st => st.HomeworkTask)
             .ThenInclude(task => task.Class)
             .ThenInclude(task => task.Teacher)
@@ -137,7 +130,11 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
                 DueDate = st.HomeworkTask.DueDate,
                 SetDate = st.HomeworkTask.SetDate,
                 Priority = st.Priority,
-                Tags = new List<TagResponseInfo> { },
+                Tags = st.Tags.Select(tag => new TagResponseInfo
+                {
+                    Name = tag.Name,
+                    StudentId = studentId,
+                }).ToList(),
                 Class = new SchoolClassResponseInfo
                 {
                     Name = st.HomeworkTask.Class.Name,
@@ -152,20 +149,30 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
                     IsComplete = todo.IsComplete,
                     Id = todo.Id
                 }).ToList()
-            }).ToArrayAsync();
+            });
         
-        // This cannot be combined into above in sqlite((
-        foreach (var studentTask in response)
+        if (filter?.Priorities.Count > 0)
         {
-            var tags = await context.Tags.Where(tag => tag.StudentId == studentId).Select(tag =>
-                new TagResponseInfo
-                {
-                    Name = tag.Name,
-                    StudentId = studentId
-                }).ToListAsync();
-            tags.ForEach(tag => studentTask.Tags.Add(tag));
+            query = query.Where(task => filter.Priorities.Contains(task.Priority));
         }
+
+
+        var response = await query.ToArrayAsync();
         
+        if (filter?.Tags.Count > 0)
+        {
+            response = response.Where(task => task.Tags.Any(tag => filter.Tags.Contains(tag.Name))).ToArray();
+        }
+
+
+        if (filter?.Title is not null && !string.IsNullOrWhiteSpace(filter.Title))
+        {
+            response = (filter.ExactMatch
+                    ? response.Where(task => task.Title.Equals(filter.Title, StringComparison.CurrentCultureIgnoreCase))
+                    : response.Where(task =>
+                        task.Title.Contains(filter.Title, StringComparison.CurrentCultureIgnoreCase))).ToArray();
+        }
+
         return response;
     }
 

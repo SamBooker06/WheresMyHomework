@@ -18,34 +18,37 @@
     <EditForm Model="Input" method="post" OnValidSubmit="SubmitFormAsync" FormName="CreateHomework">
         <DataAnnotationsValidator/>
 
-        <div class="form-floating mb-3 col-md-6">
-            <InputText @bind-Value="Input.Title" id="Input.Title" class="form-control" placeholder=" "/>
-            <label for="Input.Title" class="form-label">Title</label>
-            <ValidationMessage For="() => Input.Title"/>
+        <div class="row gx-3">
+            <div class="form-floating mb-3 col-md-6">
+                <InputText @bind-Value="Input.Title" id="Input.Title" class="form-control" placeholder=" "/>
+                <label for="Input.Title" class="form-label">Title</label>
+                <ValidationMessage For="() => Input.Title"/>
+            </div>
+            <div class="form-floating mb-3 col-md-3">
+                <InputDate @bind-Value="Input.DueDate" id="Input.DueDate"
+                           class="form-control" EnableMinMax="true" Min="@DateTime.Now.ToString("yyyy-MM-dd")"/>
+                <label for="Input.DueDate">Due date</label>
+                <ValidationMessage For="() => Input.DueDate">Homework must be set in the future</ValidationMessage>
+            </div>
         </div>
 
-        <div class="form-floating mb-3 col-md-6 ">
-            <InputTextArea @bind-Value="Input.Description" id="Input.Description" class="form-control"/>
-            <label for="Input.Description">Description</label>
-            <ValidationMessage For="() => Input.Description"/>
-        </div>
+        <div class="row gx-3">
+            <div class="form-floating mb-3 col-md-6" style="min-height: 35vh; max-height: 50vh;">
+                <InputTextArea @bind-Value="Input.Description" id="Input.Description" class="form-control h-100"/>
+                <label for="Input.Description">Description</label>
+                <ValidationMessage For="() => Input.Description"/>
+            </div>
 
-        <div class="form-floating mb-3 col-md-6">
-            <InputDate @bind-Value="Input.DueDate" id="Input.DueDate"
-                       class="form-control" EnableMinMax="true" Min="@DateTime.Now.ToString("yyyy-MM-dd")"/>
-            <label for="Input.DueDate">Due date</label>
-            <ValidationMessage For="() => Input.DueDate">Homework must be set in the future</ValidationMessage>
-        </div>
-
-        <div class="form-floating col-md-6">
-            <InputSelect @bind-Value="Input.ClassId" id="Input.ClassId" class="form-select">
-                @foreach (var cls in Classes)
-                {
-                    var subjectName = Subjects.First(subject => subject.Id == cls.SubjectId).Name;
-                    <option value="@cls.Id">@subjectName - @cls.Name</option>
-                }
-            </InputSelect>
-            <label for="Input.ClassId">Class</label>
+            <div class="form-floating col-md-3">
+                <InputSelect @bind-Value="Input.ClassId" id="Input.ClassId" class="form-select">
+                    @foreach (var cls in Classes)
+                    {
+                        var subjectName = Subjects.First(subject => subject.Id == cls.SubjectId).Name;
+                        <option value="@cls.Id">@subjectName - @cls.Name</option>
+                    }
+                </InputSelect>
+                <label for="Input.ClassId">Class</label>
+            </div>
         </div>
 
         <button class="btn btn-primary py-2 my-2" type="submit">Create homework</button>
@@ -66,7 +69,7 @@
         Debug.Assert(authInfo != null);
 
         var teacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
-        
+
         Classes = await ClassService.GetClassByTeacherAsync(teacherInfo.Id);
         Subjects = await SubjectService.GetSubjectsAsync(teacherInfo.SchoolId);
     }
@@ -85,7 +88,6 @@
         });
 
         Input = new();
-
     }
 
     private class HomeworkFormInput

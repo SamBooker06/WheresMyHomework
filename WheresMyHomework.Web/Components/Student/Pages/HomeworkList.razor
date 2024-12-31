@@ -1,31 +1,129 @@
 ﻿@using System.Diagnostics
 @using WheresMyHomework.Core.Services.Homework.DTO
 @using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Core.Services.TagService
+@using WheresMyHomework.Data.Models
+@using WheresMyHomework.Web.Components.Common
 
 @inject NavigationManager Navigator
+@inject ITagService TagService
+
 @rendermode InteractiveServer
 
 <PageTitle>View homework | WMH</PageTitle>
 
-@foreach (var task in _homeworkTasks)
-{
-    <HomeworkEntry TaskInfo="task" OnClick="RedirectToHomeworkDetailView"/>
-}
+<section class="w-100 border mb-2 d-flex align-items-start py-2">
+    <EditForm class="h-100 mx-2" FormName="SearchFilter" Model="_searchFilter" OnValidSubmit="ApplySearchFilterAsync">
+        <div class="h-100 d-flex align-items-center">
+            <div class="form-floating">
+                <InputText class="form-control" id="task-name-input" placeholder=" "
+                           @bind-Value="_searchFilter.TaskName"/>
+                <label for="task-name-input" class="form-label">Task name</label>
+            </div>
+
+            <div class="mx-2 px-2 d-inline-flex align-items-center border">
+                <InputCheckbox id="exact-match-input" class="form-check px-2 text-center"
+                               @bind-Value="_searchFilter.ExactMatch"/>
+                <label for="exact-match-input" class="d-inline px-2">Exact match</label>
+            </div>
+
+            <div class="mx-2">
+                <MultiSelect Items="_availableTags" SelectedItems="_searchFilter.Tags" Title="Tags"
+                             ItemTransformer="tag => tag.Name" MaxHeight="30"/>
+            </div>
+            <div class="mx-2">
+                <MultiSelect Items="_availablePriorities" SelectedItems="_searchFilter.Priorities" Title="Priorities"
+                             ItemTransformer="priority => priority.ToString()"/>
+            </div>
+            <button class="btn btn-primary mx-2">Search</button>
+            <button class="btn btn-outline-warning mx-2" type="reset" @onclick="ResetFormAsync">Reset</button>
+
+            <span class="d-inline-flex align-items-center">
+                <InputCheckbox class="form-check d-inline mx-2" id="only-incomplete-toggle" @bind-Value="_onlyDisplayIncomplete"/>
+                <label for="only-incomplete-toggle">Only show incomplete</label>
+            </span>
+        </div>
+
+
+    </EditForm>
+</section>
+
+<hr />
+
+<article>
+    @foreach (var task in _homeworkTasks)
+    {
+        <div @key="task.Id" hidden="@(task.IsComplete && _onlyDisplayIncomplete)">
+            <HomeworkEntry TaskInfo="task" OnClick="RedirectToHomeworkDetailView"/>
+        </div>
+    }
+</article>
 
 @code {
     private ICollection<StudentHomeworkResponseInfo> _homeworkTasks = [];
+    private bool _onlyDisplayIncomplete = false;
+    private string? _userId;
+
+    private IEnumerable<TagResponseInfo> _availableTags = [];
+    private IEnumerable<Priority> _availablePriorities = Enum.GetValues<Priority>();
+
+    private bool _filterEnabled = false;
+    private FilterModel _searchFilter = new();
 
     protected override async Task OnInitializedAsync()
     {
         var student = await StudentAuthService.GetAuthenticatedUserInfoAsync();
-        Debug.Assert(student != null);
+        if (student is null) return;
+        _userId = student.UserId;
 
-        _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId);
+        if (_filterEnabled)
+        {
+            _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId, _searchFilter.Filter);
+        }
+        else
+        {
+            _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId);
+        }
+
+        _availableTags = await TagService.GetTagsAsync(student.UserId);
     }
 
     private void RedirectToHomeworkDetailView(StudentHomeworkResponseInfo taskResponseInfo)
     {
         Navigator.NavigateTo($"Homework/{taskResponseInfo.Id}");
+    }
+
+    private class FilterModel
+    {
+        public string TaskName = string.Empty;
+        public bool ExactMatch = false;
+        public ICollection<TagResponseInfo> Tags = [];
+        public ICollection<Priority> Priorities = [];
+
+        public StudentHomeworkFilter Filter => new()
+        {
+            Title = TaskName,
+            ExactMatch = ExactMatch,
+            Priorities = Priorities,
+            Tags = Tags.Select(tag => tag.Name).ToArray()
+        };
+    }
+
+    private async Task ApplySearchFilterAsync()
+    {
+        if (_userId is null) return;
+
+        _filterEnabled = true;
+        _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(_userId, _searchFilter.Filter);
+    }
+
+    private async Task ResetFormAsync()
+    {
+        if (_userId is null) return;
+
+        _searchFilter = new FilterModel();
+        _filterEnabled = false;
+        _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(_userId, _searchFilter.Filter);
     }
 
 }

@@ -8,43 +8,62 @@
 
 @page "/Join"
 
-<section>
+<PageTitle>Create a new account | WMH</PageTitle>
+
+
+<section class="mb-md-5 mb-sm-2">
     <h1>Hello,</h1>
 
-    <h3>Your school should have already given you an email</h3>
+    <h5>Please enter your school email below</h5>
 </section>
 
-<main class="card">
-    <div class="card-body">
+<main class="">
+    <div class="">
         @if (!_alreadyExists)
         {
             <EditForm method="post" Model="SignupInfoModel" FormName="Signup" Enhance="@true"
                       OnValidSubmit="async () => await SignupAsync()">
                 <ValidationSummary/>
 
-                <div class="form-floating">
-                    <InputText readonly="@SignupInfoModel.HasSignedUp" id="email-input" class="form-control"
-                               placeholder="example@gmail.com"
-                               @bind-Value="SignupInfoModel.Email"/>
-                    <label class="form-label" for="email-input">Email address</label>
+                <div class="d-flex align-items-center flex-column">
+                    <InputCheckbox hidden @bind-Value="SignupInfoModel.HasSignedUp"/>
+
+
+                    <div class="form-floating col-md-6 mb-3">
+                        <InputText readonly="@SignupInfoModel.HasSignedUp" id="email-input" class="form-control"
+                                   placeholder=" "
+                                   @bind-Value="SignupInfoModel.Email"/>
+                        <label class="form-label" for="email-input">Email address</label>
+                    </div>
+
+
+                    @* This is needed to persist whether the user has already signed up *@
+
+                    @if (!SignupInfoModel.HasSignedUp)
+                    {
+                        <button class="btn btn-primary col-md-3" type="submit">Sign up!</button>
+                    }
+                    else
+                    {
+                        <h5>Create a password for your account</h5>
+                        
+                        <div class="form-floating col-md-6 mb-3">
+                            <InputText autofocus type="password" id="password-input" class="form-control "
+                                       placeholder=" "
+                                       @bind-Value="SignupInfoModel.Password"/>
+                            <label class="form-label" for="password-input">Password</label>
+                        </div>
+                        
+                        <div class="form-floating col-md-6 mb-3">
+                            <InputText autofocus type="password" id="confirm-password-input" class="form-control "
+                                       placeholder=" "
+                                       @bind-Value="SignupInfoModel.Password"/>
+                            <label class="form-label" for="confirm-password-input">Confirm password</label>
+                        </div>
+                        
+                        <button class="btn btn-primary col-md-3" type="submit">Set new password</button>
+                    }
                 </div>
-
-                @* This is needed to persist whether the user has already signed up *@
-                <InputCheckbox hidden @bind-Value="SignupInfoModel.HasSignedUp"/>
-
-                @if (!SignupInfoModel.HasSignedUp)
-                {
-                    <button class="btn btn-primary" type="submit">Sign up!</button>
-                }
-                else
-                {
-                    <InputText autofocus type="password" id="password-input" class="form-control"
-                               placeholder=""
-                               @bind-Value="SignupInfoModel.Password"/>
-                    <label class="form-label" for="password-input">Password</label>
-
-                    <button class="btn btn-primary" type="submit">Confirm password</button>
-                }
             </EditForm>
         }
         else
@@ -61,10 +80,14 @@
 
     private class SignupModel
     {
-        [Required, EmailAddress] public string Email { get; set; } = string.Empty;
+        [Required, EmailAddress, DataType(DataType.EmailAddress)]
+        public string Email { get; set; } = string.Empty;
 
-        [Required, PasswordPropertyText, MaxLength(36)]
+        [Required, PasswordPropertyText, MaxLength(36), DataType(DataType.Password), Display(Name = "Password")]
         public string Password { get; set; } = string.Empty;
+
+        [Required, PasswordPropertyText, MaxLength(36), Display(Name = "Confirm password"), Compare("Password")]
+        public string ConfirmPassword { get; set; } = string.Empty;
 
         public bool HasSignedUp { get; set; }
     }

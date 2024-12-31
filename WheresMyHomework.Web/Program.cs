@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MudBlazor.Services;
 using WheresMyHomework.Core.Services.Auth;
 using WheresMyHomework.Core.Services.Class;
 using WheresMyHomework.Core.Services.Homework;
+using WheresMyHomework.Core.Services.MessagingService;
 using WheresMyHomework.Core.Services.SubjectService;
 using WheresMyHomework.Core.Services.TagService;
 using WheresMyHomework.Core.Services.TodoService;
@@ -62,11 +62,11 @@ builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 // Custom services
-// builder.Services.AddMudServices();
-
+builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddScoped<IHomeworkService, HomeworkService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<IStandardUserService, StandardUserService>();
 
 builder.Services.AddScoped<AdminAuthService>();
 builder.Services.AddScoped<TeacherAuthService>();
@@ -104,6 +104,8 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+app.UseStatusCodePagesWithRedirects("/StatusCode/{0}");
 
 
 await using (var scope = app.Services.CreateAsyncScope())

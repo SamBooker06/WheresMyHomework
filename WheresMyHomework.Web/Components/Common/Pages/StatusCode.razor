@@ -1,0 +1,20 @@
+﻿@inject NavigationManager Navigator
+
+@page "/StatusCode/{Code:int}"
+
+<h1>@Code</h1>
+
+@if (Code == 404)
+{
+    <h5>Sorry, the page you are looking for does not exist</h5>
+}
+else
+{
+    <h5>There was a problem getting your page. You can find more info <a
+            href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/@Code">Here</a></h5>
+}
+
+@code {
+    [Parameter] public int Code { get; init; }
+
+}

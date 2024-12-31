@@ -11,6 +11,7 @@ using WheresMyHomework.Data.Models;
 
 namespace WheresMyHomework.Web.Components.Student.Pages;
 
+//TODO: Move into a teacher and student HomeworkDetailView
 public partial class HomeworkDetailView
 {
     private const int NoteUpdateInterval = 500;
@@ -18,6 +19,7 @@ public partial class HomeworkDetailView
     [Parameter] public int Id { get; init; }
 
     private StudentHomeworkResponseInfo _homeworkInfo = null!;
+    private UserInfo _userInfo;
     private TeacherInfo _teacherInfo = null!;
     private SubjectResponseInfo _subjectInfo = null!;
 
@@ -38,7 +40,7 @@ public partial class HomeworkDetailView
 
     private Timer? _notesAutoSaveTimer;
     private bool _noteIsUpdating;
-    private InputText _newTodoInput;
+    private InputText? _newTodoInput;
     private bool _shouldFocusOnNewTodo;
 
     private IList<TagResponseInfo> _tags = [];
@@ -65,6 +67,7 @@ public partial class HomeworkDetailView
         _teacherInfo = await TeacherService.GetTeacherByHomeworkIdAsync(Id);
         _subjectInfo = await SubjectService.GetSubjectInfoAsync(_homeworkInfo.Class.SubjectId);
         _todos = new List<TodoResponseInfo>(_homeworkInfo.Todos);
+        _userInfo = await StudentService.GetStudentInfoAsync(student.UserId);
         _isComplete = _homeworkInfo.IsComplete;
 
         _tags = new List<TagResponseInfo>(_homeworkInfo.Tags);
@@ -149,7 +152,7 @@ public partial class HomeworkDetailView
 
         public Priority Priority { get; set; }
         public string? EditedTodoDescription { get; set; }
-        public string NewTagName { get; set; }
+        public string? NewTagName { get; set; }
     }
 
     private async Task UpdateTodoDescriptionAsync()

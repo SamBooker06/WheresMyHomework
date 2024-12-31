@@ -1,0 +1,64 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using WheresMyHomework.Core.Services.Users
+
+@page "/Chat/{ReceiverUserId}/{*_}"
+@page "/Chat/{ReceiverUserId}"
+@page "/Chat"
+
+@inject IStudentService StudentService
+@inject ITeacherService TeacherService
+@inject IStandardUserService StandardUserService
+
+@attribute [Authorize(Roles = "Student,Teacher")]
+
+@rendermode InteractiveServer
+
+<PageTitle>@_pageTitle</PageTitle>
+
+@if (_sender is null || _receiver is null)
+{
+    <h5 class="text-danger">A user must be provided</h5>
+}
+else
+{
+    <div class="h-100 m-2 d-flex flex-column align-items-center">
+        <Messenger Sender="_sender" Receiver="_receiver"/>
+    </div>
+}
+
+@code {
+    [Parameter] public string? ReceiverUserId { get; set; }
+    [Parameter] public string? _ { init; get; }
+    
+    private UserInfo? _sender;
+    private UserInfo? _receiver;
+
+    private string _pageTitle = "There was a problem loading your chat | WMH";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ReceiverUserId is null) return;
+        
+        if (await StudentAuthService.IsAuthenticatedAsync())
+        {
+            var authInfo = await StudentAuthService.GetAuthenticatedUserInfoAsync();
+            if (authInfo is null) return;
+
+            _sender = await StudentService.GetStudentInfoAsync(authInfo.UserId);
+        } 
+        else if (await TeacherAuthService.IsAuthenticatedAsync())
+        {
+            var authInfo = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
+            if (authInfo is null) return;
+
+            _sender = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
+        }
+
+        _receiver = await StandardUserService.GetUserInfoAsync(ReceiverUserId);
+        if (_receiver is null) return;
+
+        _pageTitle = $"Your chat with {_receiver.Title}. {_receiver.LastName} | WMH";
+
+    }
+
+}

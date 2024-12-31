@@ -8,29 +8,25 @@
 
 @rendermode InteractiveServer
 
-@* References:
-https://getbootstrap.com/docs/4.0/layout/grid/
-https://getbootstrap.com/docs/4.1/examples/pricing/
- *@
 
-<div class="homework-entry card mb-3" @onclick="HandleClick" style="cursor: pointer">
+<div class="homework-entry card mb-3" @onclick="HandleClick" style="cursor: pointer; z-index: 0;">
     <div class="card-body">
         <div class="row">
             <div class="col-2">
-                <div class="due-date text-center">
+                <div class="due-date text-center text-info-emphasis fw-semibold">
                     <div class="date-day">@DueDate.Day</div>
                     <div class="date-month">@DueDate.ToString("MMMM")</div>
                 </div>
             </div>
             <div class="col-8">
-                <div class="homework-title">@TaskInfo.Title</div>
+                <div class="homework-title fw-bold text-primary">@TaskInfo.Title</div>
                 <div
-                    class="homework-subject">@User.Title @User.LastName - @SubjectInfo.Name</div>
+                    class="homework-subject text-secondary">@User.Title @User.LastName - @SubjectInfo.Name</div>
             </div>
             <div class="col-2 text-right">
                 
                 <span
-                    class="badge badge-danger text-center text-black">@(TaskInfo.IsComplete ? "Complete" : "Incomplete")
+                    class="badge @CompletionStatusCSS text-center">@(TaskInfo.IsComplete ? "Complete" : "Incomplete")
                 </span>
 
             </div>
@@ -43,6 +39,7 @@ https://getbootstrap.com/docs/4.1/examples/pricing/
     [Parameter] public EventCallback<StudentHomeworkResponseInfo> OnClick { get; set; }
 
     private DateTime DueDate { get; set; }
+    private string CompletionStatusCSS => TaskInfo.IsComplete ? "bg-success" : "bg-danger";
 
     private UserInfo User { get; set; } = null!;
     private SchoolClassResponseInfo ClassResponse { get; set; } = null!;
