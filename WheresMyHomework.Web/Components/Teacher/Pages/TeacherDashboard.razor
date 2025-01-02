@@ -9,7 +9,6 @@
 
 
 <button class="btn btn-outline-primary" @onclick="GoToSetHomework">Set homework</button>
-<button class="btn btn-outline-primary" @onclick="GoToViewHomework">View homework</button>
 <button class="btn btn-outline-primary" @onclick="GoToClassManagement">Manage your classes</button>
 
 @code {
@@ -19,11 +18,7 @@
     {
         Navigator.NavigateTo("Homework/Create");
     }
-
-    private void GoToViewHomework()
-    {
-        Navigator.NavigateTo("Homework");
-    }
+    
 
     protected override async Task OnInitializedAsync()
     {

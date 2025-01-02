@@ -1,5 +1,4 @@
-﻿@using System.Diagnostics
-@using WheresMyHomework.Core.Services.Homework.DTO
+﻿@using WheresMyHomework.Core.Services.Homework.DTO
 @using WheresMyHomework.Core.Services.Homework.DTO.Response
 @using WheresMyHomework.Core.Services.TagService
 @using WheresMyHomework.Data.Models
@@ -7,6 +6,8 @@
 
 @inject NavigationManager Navigator
 @inject ITagService TagService
+
+@page "/Homework"
 
 @rendermode InteractiveServer
 
@@ -39,7 +40,8 @@
             <button class="btn btn-outline-warning mx-2" type="reset" @onclick="ResetFormAsync">Reset</button>
 
             <span class="d-inline-flex align-items-center">
-                <InputCheckbox class="form-check d-inline mx-2" id="only-incomplete-toggle" @bind-Value="_onlyDisplayIncomplete"/>
+                <InputCheckbox class="form-check d-inline mx-2" id="only-incomplete-toggle"
+                               @bind-Value="_onlyDisplayIncomplete"/>
                 <label for="only-incomplete-toggle">Only show incomplete</label>
             </span>
         </div>
@@ -48,7 +50,7 @@
     </EditForm>
 </section>
 
-<hr />
+<hr/>
 
 <article>
     @foreach (var task in _homeworkTasks)
@@ -70,6 +72,9 @@
     private bool _filterEnabled = false;
     private FilterModel _searchFilter = new();
 
+    private bool HasOverDueTasks => _homeworkTasks.Any(task => !task.IsComplete 
+                                                               && task.DueDate < DateTime.Today);
+
     protected override async Task OnInitializedAsync()
     {
         var student = await StudentAuthService.GetAuthenticatedUserInfoAsync();
@@ -84,6 +89,8 @@
         {
             _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId);
         }
+
+        _homeworkTasks = _homeworkTasks.OrderBy(task => task.DueDate).ToList();
 
         _availableTags = await TagService.GetTagsAsync(student.UserId);
     }
@@ -123,7 +130,7 @@
 
         _searchFilter = new FilterModel();
         _filterEnabled = false;
-        _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(_userId, _searchFilter.Filter);
+        _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(_userId);
     }
 
 }

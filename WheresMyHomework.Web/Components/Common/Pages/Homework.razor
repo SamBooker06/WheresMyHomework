@@ -1,18 +1,21 @@
-﻿@page "/Homework"
+﻿@page "/Homework/{HomeworkId:int}"
 @using WheresMyHomework.Web.Components.Student.Pages
 @using WheresMyHomework.Web.Components.Teacher.Pages
 
+@inject NavigationManager Navigator
+
 @if (_isStudent)
 {
-    <HomeworkList />
+    <HomeworkDetailView HomeworkId="HomeworkId"/>
 }
 else if (_isTeacher)
 {
-    <TeacherHomeworkList/>
+    <HomeworkEditor HomeworkId="HomeworkId"/>
 }
 
-
 @code {
+    [Parameter] public int HomeworkId { get; set; }
+
     private bool _isTeacher;
     private bool _isStudent;
 
@@ -20,7 +23,8 @@ else if (_isTeacher)
     {
         _isTeacher = await TeacherAuthService.IsAuthenticatedAsync();
         _isStudent = await StudentAuthService.IsAuthenticatedAsync();
-        
+
+        if (!_isTeacher && !_isStudent) Navigator.NavigateTo("404");
     }
 
 }

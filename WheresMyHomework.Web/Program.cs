@@ -41,6 +41,8 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireRole("Teacher"));
     options.AddPolicy("HasStudentRole",
         policy => policy.RequireRole("Student"));
+    options.AddPolicy("HasSuperAdminRole",
+        policy => policy.RequireRole("SuperAdmin"));
 });
 
 var connectionString =

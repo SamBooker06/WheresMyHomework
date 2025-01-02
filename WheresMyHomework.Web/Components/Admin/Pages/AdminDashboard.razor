@@ -1,11 +1,19 @@
-﻿@using System.ComponentModel.DataAnnotations
-@using System.Diagnostics
+﻿@using System.Diagnostics
 
 @inject NavigationManager Navigator
 @rendermode InteractiveServer
 
-<h3>Hello, @Info.Title @Info.LastName</h3>
-<button @onclick="OnClick">Create class</button>
+<PageTitle>Admin dashboard | WMH</PageTitle>
+
+<h3>
+    Hello, @Info.Title @Info.LastName <br>
+    Welcome to the admin dashboard
+</h3>
+
+<div class="row">
+    <button class="btn btn-outline-primary me-2 col-md-3" @onclick="GoToUserCreator">Create new users</button>
+    <button class="btn btn-outline-primary col-md-3" @onclick="GoToSubjectCreator">Create new subjects</button>
+</div>
 
 @code {
     private AdminInfo Info { get; set; } = null!;
@@ -17,11 +25,15 @@
 
         Info = await AdminService.GetAdminInfoAsync(authInfo.UserId);
     }
-
-
-    private void OnClick()
+    
+    private void GoToUserCreator()
     {
-        Navigator.NavigateTo("Class/Create");
+        Navigator.NavigateTo("/Users/Create");
+    }
+
+    private void GoToSubjectCreator()
+    {
+        Navigator.NavigateTo("/Subjects/Create");
     }
 
 }

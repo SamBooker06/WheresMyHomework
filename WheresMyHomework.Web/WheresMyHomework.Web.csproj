@@ -19,4 +19,8 @@
       <ProjectReference Include="..\WheresMyHomework.Data\WheresMyHomework.Data.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Components\SuperAdmin\" />
+    </ItemGroup>
+
 </Project>

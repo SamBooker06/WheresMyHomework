@@ -2,19 +2,22 @@
 @using Microsoft.AspNetCore.Identity
 @using WheresMyHomework.Data.Models.Users
 
-@page "/CreateUser"
+@page "/Users/Create"
 
 @inject IUserStore<ApplicationUser> UserStore
 @inject UserManager<ApplicationUser> UserManager
 
 @rendermode InteractiveServer
 
-@* TODO: Edit form for creating students and teachers. Create URL for signups with QR code*@
-@* https://www.c-sharpcorner.com/article/create-qr-code-in-blazor-using-asp-net-core/ *@
-@* Send email @ https://mailchimp.com/developer/transactional/guides/quick-start/#create-an-account *@
+<PageTitle>Create new user | WMH</PageTitle>
+
+@if (_justCreated)
+{
+    <div class="alert alert-success">Successfully created new user!</div>
+}
 
 <main>
-    <div class="card">
+    <div class="card p-md-2">
         <h1 class="card-title">Create new user</h1>
 
         <section class="card-body m-2">
@@ -22,44 +25,54 @@
                       OnValidSubmit="async () => await CreateNewUserAsync()">
                 <DataAnnotationsValidator/>
 
-                <div class="col-md-2">
-                    <InputSelect class="form-control form-select" TValue="PersonTitle"
-                                 @bind-Value="_userModel.Title">
-                        @foreach (var title in Enum.GetValues<PersonTitle>())
-                        {
-                            <option value="@title">@title</option>
-                        }
-                    </InputSelect>
+                <div class="row">
+                    <div class="col-md-2">
+                        <InputSelect class="form-control form-select" TValue="PersonTitle"
+                                     @bind-Value="_userModel.Title">
+                            @foreach (var title in Enum.GetValues<PersonTitle>())
+                            {
+                                <option value="@title">@title</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3 form-floating">
+                        <InputText id="first-name-input" class="form-control" @bind-Value="_userModel.FirstName"
+                                   placeholder=" "/>
+                        <label class="form-label" for="first-name-input">First name</label>
+                    </div>
+
+                    <div class="col-md-3 form-floating">
+                        <InputText id="last-name-input" class="form-control" @bind-Value="_userModel.LastName"
+                                   placeholder=" "/>
+                        <label class="form-label" for="last-name-input">Last name</label>
+                    </div>
                 </div>
 
-                <div class="col-md-4">
-                    <InputText id="first-name-input" class="form-control" @bind-Value="_userModel.FirstName"
-                               placeholder="Joe"/>
-                    <label class="form-label" for="first-name-input">First name</label>
+                <div class="row mt-3">
+                    <div class="col-md-2">
+                        <InputSelect
+                            class="form-control form-select mb-2"
+                            TValue="UserType" @bind-Value="_userModel.UserType">
+                            <option value="@UserType.Admin">Admin</option>
+                            <option value="@UserType.Teacher">Teacher</option>
+                            <option value="@UserType.Student">Student</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-4 form-floating mb-3">
+                        <InputText id="email-input" @bind-Value="_userModel.Email"
+                                   class="form-control" placeholder=" " type="email"/>
+                        <label class="form-label" for="email-input">Email address</label>
+
+                    </div>
                 </div>
 
-                <div class="col-md-4">
-                    <InputText id="last-name-input" class="form-control" @bind-Value="_userModel.LastName"
-                               placeholder="Bloggs"/>
-                    <label class="form-label" for="last-name-input">Last name</label>
+                <div class="row">
+                    <div class="mb-3 col-md-2">
+                        <button class="btn btn-primary w-100" type="submit">Create user</button>
+                    </div>
                 </div>
-
-                <div class="col-md-4 form-floating mb-3">
-                    <InputText id="email-input" @bind-Value="_userModel.Email"
-                               class="form-control" placeholder="example@gmail.com" type="email"/>
-                    <label class="form-label" for="email-input">Email address</label>
-
-                </div>
-
-                <InputSelect
-                    class="form-control form-select"
-                    TValue="UserType" @bind-Value="_userModel.UserType">
-                    <option value="@UserType.Admin">Admin</option>
-                    <option value="@UserType.Teacher">Teacher</option>
-                    <option value="@UserType.Student">Student</option>
-                </InputSelect>
-
-                <button class="btn btn-primary" type="submit">Create user</button>
             </EditForm>
         </section>
     </div>
@@ -67,6 +80,7 @@
 
 
 @code {
+    private bool _justCreated = false;
 
     private enum UserType
     {
@@ -112,23 +126,13 @@
 
         var adminInfo = await AdminService.GetAdminInfoAsync(adminAuth.UserId);
 
-        // TODO: Add to classes and subjects
-
-        ApplicationUser user;
-        switch (_userModel.UserType)
+        ApplicationUser user = _userModel.UserType switch
         {
-            case UserType.Admin:
-                user = CreateAdmin(adminInfo);
-                break;
-            case UserType.Teacher:
-                user = CreateTeacher(adminInfo);
-                break;
-            case UserType.Student:
-                user = CreateStudent(adminInfo);
-                break;
-            default:
-                throw new ApplicationException($"Unexpected user type, {_userModel.UserType}");
-        }
+            UserType.Admin => CreateAdmin(adminInfo),
+            UserType.Teacher => CreateTeacher(adminInfo),
+            UserType.Student => CreateStudent(adminInfo),
+            _ => throw new ApplicationException($"Unexpected user type, {_userModel.UserType}")
+        };
 
         var username = _userModel.Email.Split('@')[0];
         await UserStore.SetUserNameAsync(user, username, CancellationToken.None);
@@ -142,6 +146,8 @@
         if (!result.Succeeded) return;
         await UserManager.AddToRoleAsync(user, _userModel.UserType.ToString());
         _userModel = new UserModel(); // Reset form
+
+        _justCreated = true;
     }
 
     private Student CreateStudent(AdminInfo adminInfo)

@@ -7,6 +7,7 @@
 @inject IClassService ClassService
 @inject IStudentService StudentService
 @inject ISubjectService SubjectService
+@inject NavigationManager Navigator
 @inject ILogger<ManageClasses> Logger
 
 @page "/Classes"
@@ -14,9 +15,6 @@
 @rendermode InteractiveServer
 
 <PageTitle>Manage your classes | WMH</PageTitle>
-
-@* TODO: Allow teachers to modify existing classes, and give them a proper view to see set homework. Then allow
-   TODO: them to modify any homework. *@
 
 @if (_teacher is not null
      && _classes is not null
@@ -34,7 +32,10 @@
                         @foreach (var cls in _classes)
                         {
                             <li class="list-group-item">
-                                @cls.Name
+                                <div class="d-flex justify-content-between align-items-center text-center">
+                                    <h5 class="fw-semibold text-info-emphasis d-inline" style="margin: 0;">@cls.Name</h5>
+                                    <button class="btn btn-outline-primary" @onclick="() => GoToClassManagementAsync(cls.Id)">Manage</button>
+                                </div>
                             </li>
                         }
                     </ul>
@@ -119,7 +120,7 @@ else
 
         _teacher = await TeacherService.GetTeacherInfoAsync(teacherAuth.UserId);
         _classes = await ClassService.GetClassByTeacherAsync(_teacher.Id);
-        _students = (await StudentService.GetStudentInfoBySchoolAsync(_teacher.SchoolId)).OrderBy(student => student.LastName + student.LastName);
+        _students = (await StudentService.GetStudentsBySchoolAsync(_teacher.SchoolId)).OrderBy(student => student.LastName + student.LastName);
         _subjects = await SubjectService.GetSubjectsAsync(_teacher.SchoolId);
     }
 
@@ -158,5 +159,10 @@ else
 
         [Required] public int SubjectId { get; set; }
     }
-    
+
+    private void GoToClassManagementAsync(int classId)
+    {
+        Navigator.NavigateTo($"/Classes/{classId}");
+    }
+
 }

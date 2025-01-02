@@ -1,0 +1,161 @@
+﻿@using WheresMyHomework.Core.Services.Class
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+@using WheresMyHomework.Web.Components.Common
+
+@inject IClassService ClassService
+@inject IStudentService StudentService
+@inject NavigationManager Navigator
+
+@rendermode InteractiveServer
+
+@page "/Classes/{ClassId:int}"
+
+
+@if (_classInfo is null || _teacherInfo is null || _students is null || _homework is null)
+{
+    <PageTitle>There was a problem getting your class info | WMH</PageTitle>
+    <p class="text-danger">Sorry, there was a problem getting your info</p>
+}
+else
+{
+    <PageTitle>Manage @_classInfo.Name | WMH</PageTitle>
+
+    <h1>Manage @_classInfo.Name</h1>
+
+    <main class="pt-2">
+        <article class="mt-2 row gx-2 mh-100">
+            <section class="card col-md-5 mb-2 p-2 me-4">
+                <h5 class="card-title mb-2 ms-2">View students</h5>
+
+                <span class="d-inline-flex align-items-center justify-content-around my-2">
+                    <MultiSelect TItem="UserInfo" Items="_availableStudents" SelectedItems="_students"
+                                 Title="Manage Students"
+                                 MaxHeight="30" ItemTransformer=@(student => $"{student.LastName}, {student.FirstName}")
+                                 CssClass="col-md-4"/>
+                    <button class="btn btn-outline-primary col-md-4"
+                            @onclick="UpdateClassMembersAsync">Confirm changes</button>
+                </span>
+
+                <hr>
+
+                <ul class="list-group">
+                    @foreach (var student in _students)
+                    {
+                        <li class="list-group-item d-flex align-items-center text-center" style="cursor:pointer;"
+                            @onclick="() => GoToChat(student)">
+                            <i class="bi bi-person-fill"></i>
+                            <p class="text-center text-info-emphasis fw-semibold mb-0 ms-2">@student.LastName, @student.FirstName</p>
+                        </li>
+                    }
+                </ul>
+
+            </section>
+            <section class="card col-md-6 mb-2 p-2 overflow-y-scroll">
+                <h5 class="card-title mb-2 ms-2">View homework</h5>
+                <hr>
+                <article>
+                    @foreach (var task in _homework)
+                    {
+                        <TeacherHomeworkEntry HomeworkInfo="task" OnClick="() => GoToHomeworkEditor(task.Id)"/>
+                    }
+                </article>
+            </section>
+        </article>
+    </main>
+}
+
+@code {
+    [Parameter] public int ClassId { get; set; }
+
+    private UserInfo? _teacherInfo;
+    private SchoolClassResponseInfo? _classInfo;
+
+    private IList<UserInfo>? _students;
+    private IReadOnlyCollection<UserInfo>? _originalStudents;
+    private IEnumerable<UserInfo>? _availableStudents = [];
+
+    private IEnumerable<HomeworkResponseInfo>? _homework;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authInfo = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
+        if (authInfo is null) return;
+
+        _teacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
+
+        _classInfo = await ClassService.GetClassByIdAsync(ClassId);
+        if (_classInfo?.TeacherId != authInfo.UserId)
+        {
+            _classInfo = null;
+            return;
+        }
+
+        _students = (await StudentService.GetStudentsByClassAsync(_classInfo.Id))
+            ?.OrderBy(student => $"{student.LastName}{student.FirstName}").ToList();
+        _originalStudents = _students?.ToList();
+        _availableStudents = (await StudentService.GetStudentsBySchoolAsync(_teacherInfo.SchoolId))
+            .OrderBy(student => $"{student.LastName}{student.FirstName}");
+
+        _homework = await HomeworkService.GetHomeworkByClassAsync(ClassId);
+    }
+
+    private async Task UpdateClassMembersAsync()
+    {
+        if (_classInfo is null) return;
+
+        var changeMap = GetStudentChanges();
+        if (changeMap is null) return;
+
+        foreach (var newStudent in changeMap.NewStudents)
+        {
+            await ClassService.AddStudentToClass(_classInfo.Id, newStudent.Id);
+        }
+
+        foreach (var removedStudent in changeMap.RemovedStudents)
+        {
+            await ClassService.RemoveStudentFromClass(_classInfo.Id, removedStudent.Id);
+        }
+    }
+
+    private ChangeMap? GetStudentChanges()
+    {
+        if (_originalStudents is null || _students is null) return null;
+
+        return new ChangeMap(_originalStudents, _students);
+    }
+
+    private class ChangeMap
+    {
+        public ICollection<UserInfo> NewStudents { get; } = [];
+        public ICollection<UserInfo> RemovedStudents { get; } = [];
+
+        public ChangeMap(IEnumerable<UserInfo> originalStudents, IEnumerable<UserInfo> currentStudents)
+        {
+            var originalStudentList = new HashSet<UserInfo>(originalStudents);
+            var currentStudentList = new HashSet<UserInfo>(currentStudents);
+
+
+            foreach (var originalStudent in originalStudentList.Where(originalStudent => !currentStudentList.Contains(originalStudent)))
+            {
+                RemovedStudents.Add(originalStudent);
+            }
+
+            foreach (var currentStudent in currentStudentList.Where(currentStudent => !originalStudentList.Contains(currentStudent)))
+            {
+                NewStudents.Add(currentStudent);
+            }
+        }
+    }
+
+    private void GoToHomeworkEditor(int taskId)
+    {
+        Navigator.NavigateTo($"/Homework/{taskId}");
+    }
+
+    private void GoToChat(UserInfo student)
+    {
+        Navigator.NavigateTo($"/Chat/{student.Id}/{student.FirstName} {student.LastName}");
+    }
+
+}

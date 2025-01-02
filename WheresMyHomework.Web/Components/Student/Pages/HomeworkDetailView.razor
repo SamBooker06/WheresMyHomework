@@ -4,8 +4,6 @@
 @using WheresMyHomework.Data.Models
 @using WheresMyHomework.Web.Components.Common
 
-@page "/Homework/{Id:int}"
-
 @rendermode InteractiveServer
 
 @inject ITeacherService TeacherService
@@ -84,6 +82,7 @@
                               @onmouseleave="() => mousedOverTagName = null">
                             
                             <p class="d-inline mx-1 my-auto">@tag.Name</p>
+                            
                             @if (_mousedOverTagName == tag.Name)
                             {
                                 <button class="btn bi bi-trash-fill ratio-1x1 p-0 m-0" type="button"

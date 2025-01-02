@@ -6,5 +6,9 @@ namespace WheresMyHomework.Core.Services.Class;
 public interface IClassService
 {
     public Task<int> CreateClassAsync(CreateClassInfo info);
-    Task<IEnumerable<SchoolClassResponseInfo>> GetClassByTeacherAsync(string teacherId);
+    public Task<IEnumerable<SchoolClassResponseInfo>> GetClassByTeacherAsync(string teacherId);
+
+    public Task<SchoolClassResponseInfo?> GetClassByIdAsync(int classId);
+    Task<bool> AddStudentToClass(int classId, string studentId);
+    Task<bool> RemoveStudentFromClass(int classId, string studentId);
 }

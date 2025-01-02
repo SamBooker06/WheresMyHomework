@@ -10,32 +10,19 @@ public interface IHomeworkService
 {
     Task CreateHomeworkAsync(HomeworkRequestInfo info);
     Task DeleteHomeworkByIdAsync(int homeworkId);
-    Task<HomeworkResponseInfo> GetHomeworkInfoByIdAsync(int homeworkId);
+    Task<HomeworkResponseInfo> GetHomeworkById(int homeworkId);
     Task<StudentHomeworkResponseInfo> GetStudentHomeworkInfoByIdAsync(int homeworkId, string studentId);
 
     Task<ICollection<StudentHomeworkResponseInfo>> GetStudentHomeworkAsync(string studentId,
         StudentHomeworkFilter? filter=null);
 
-    Task<ICollection<HomeworkResponseInfo>> GetHomeworkInfoByClassIdAsync(int classId);
+    Task<ICollection<HomeworkResponseInfo>> GetHomeworkByClassAsync(int classId);
     Task<bool> UpdateNotesAsync(int studentHomeworkId, string newNotes);
     Task<bool> UpdateHomeworkCompletionStatusAsync(int studentHomeworkId, bool isComplete);
     Task<bool> UpdateHomeworkPriorityAsync(int studentHomeworkId, Priority priority);
+    Task<IEnumerable<HomeworkResponseInfo>> GetHomeworkByTeacherAsync(string teacherId);
+    Task<bool> UpdateDescriptionAsync(int homeworkId, string newDescription);
+    Task<bool> UpdateTitleAsync(int homeworkId, string newTitle);
+    Task<bool> UpdateDueDateAsync(int homeworkId, DateTime dueDate);
 }
 
-// TODO: Make UI
-class CoffeeCup
-{
-    public bool IsEmpty { get; set; }
-
-    public void Refill()
-    {
-        var message = IsEmpty ? "Refilling coffee cup" : "Not refilling coffee cup";
-        Console.WriteLine(message);
-    }
-
-    public void Drink()
-    {
-        var message = IsEmpty ? "Drinking coffee" : "Not drinking coffee";
-        Console.WriteLine(message);
-    }
-}

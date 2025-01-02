@@ -1,0 +1,27 @@
+﻿@using WheresMyHomework.Core.Services.Homework.DTO.Response
+
+<div class="card mb-3" @onclick="OnClick" style="cursor: pointer;">
+    <div class="card-body">
+        <div class="row">
+            @* Due date: *@
+            <div class="col-4 text-center text-info-emphasis fw-semibold">
+                <div>@HomeworkInfo.DueDate.Day</div>
+                <div>@HomeworkInfo.DueDate.ToString("MMMM")</div>
+            </div>
+
+            @* Task title *@
+            <div class="col-8">
+                <div class="fw-bold text-primary">
+                    @HomeworkInfo.Title
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter, EditorRequired] public required HomeworkResponseInfo HomeworkInfo { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; } = EventCallback.Empty;
+
+}

@@ -21,7 +21,7 @@ public class StudentService(ApplicationDbContext context) : IStudentService
             }).FirstAsync();
     }
 
-    public async Task<ICollection<UserInfo>> GetStudentInfoBySchoolAsync(int schoolId)
+    public async Task<ICollection<UserInfo>> GetStudentsBySchoolAsync(int schoolId)
     {
         return await context.Users.OfType<Student>()
             .Where(student => student.SchoolId == schoolId)
@@ -36,11 +36,16 @@ public class StudentService(ApplicationDbContext context) : IStudentService
             .ToListAsync();
     }
 
-    public async Task<ICollection<Student>> GetStudentsBySchoolAsync(School school)
+    public async Task<IEnumerable<UserInfo>?> GetStudentsByClassAsync(int classId)
     {
-        return await context.Users.OfType<Student>()
-            .Where(student => student.School == school)
-            .ToListAsync();
+        return await context.Classes.Where(cls => cls.Id == classId)
+            .Select(cls => cls.Students.Select(student => new UserInfo
+            {
+                Id = student.Id,
+                FirstName = student.FirstName,
+                LastName = student.LastName,
+                Title = student.Title,
+                SchoolId = student.SchoolId,
+            })).FirstOrDefaultAsync();
     }
-    
 }

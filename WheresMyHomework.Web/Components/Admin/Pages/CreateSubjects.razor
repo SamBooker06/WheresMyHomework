@@ -7,8 +7,9 @@
 @inject ISubjectService SubjectService
 @inject ITeacherService TeacherService
 
-<h3>Create Subject</h3>
+<PageTitle>Create a new subject | WMH</PageTitle>
 
+<h3>Create Subject</h3>
 
 @if (_hasJustCreated)
 {
@@ -20,13 +21,13 @@
               FormName="CreateSubject">
         <DataAnnotationsValidator/>
 
-        <div class="form-floating mb-3">
-            <InputText @bind-Value="Input.Name" id="Input.Name" class="form-control"/>
+        <div class="form-floating mb-3 col-md-6">
+            <InputText @bind-Value="Input.Name" id="Input.Name" class="form-control" placeholder=" "/>
             <label for="Input.Name" class="form-label">Name</label>
             <ValidationMessage For="() => Input.Name"/>
         </div>
 
-        <button class="btn-sm" type="submit">Create subject</button>
+        <button class="btn btn-primary" type="submit">Create subject</button>
 
     </EditForm>
 </section>
@@ -39,7 +40,7 @@
     private IEnumerable<TeacherInfo> _teachers = null!;
     private bool _hasJustCreated;
 
-    private AdminInfo _adminInfo = null!;
+    private UserInfo _adminInfo = null!;
 
     protected override async Task OnInitializedAsync()
     {

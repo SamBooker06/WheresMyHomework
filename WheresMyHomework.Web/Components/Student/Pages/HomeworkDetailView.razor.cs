@@ -16,7 +16,7 @@ public partial class HomeworkDetailView
 {
     private const int NoteUpdateInterval = 500;
 
-    [Parameter] public int Id { get; init; }
+    [Parameter, EditorRequired] public int HomeworkId { get; init; }
 
     private StudentHomeworkResponseInfo _homeworkInfo = null!;
     private UserInfo _userInfo;
@@ -63,8 +63,8 @@ public partial class HomeworkDetailView
         var student = await StudentAuthService.GetAuthenticatedUserInfoAsync();
         Debug.Assert(student != null);
 
-        _homeworkInfo = await HomeworkService.GetStudentHomeworkInfoByIdAsync(Id, student.UserId);
-        _teacherInfo = await TeacherService.GetTeacherByHomeworkIdAsync(Id);
+        _homeworkInfo = await HomeworkService.GetStudentHomeworkInfoByIdAsync(HomeworkId, student.UserId);
+        _teacherInfo = await TeacherService.GetTeacherByHomeworkIdAsync(HomeworkId);
         _subjectInfo = await SubjectService.GetSubjectInfoAsync(_homeworkInfo.Class.SubjectId);
         _todos = new List<TodoResponseInfo>(_homeworkInfo.Todos);
         _userInfo = await StudentService.GetStudentInfoAsync(student.UserId);
@@ -93,7 +93,7 @@ public partial class HomeworkDetailView
         var todoResponse = await TodoService.CreateNewTodoAsync(todoRequest);
 
         // Clear post data
-        Navigator.NavigateTo($"Homework/{Id}");
+        Navigator.NavigateTo($"Homework/{HomeworkId}");
 
         _todos.Add(todoResponse);
         _homeworkModel.NewTodoDescription = string.Empty; // Clear form data

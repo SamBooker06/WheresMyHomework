@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Immutable;
+using Microsoft.EntityFrameworkCore;
 using WheresMyHomework.Core.Services.Homework.DTO;
 using WheresMyHomework.Core.Services.Homework.DTO.Request;
 using WheresMyHomework.Core.Services.Homework.DTO.Response;
@@ -7,7 +8,6 @@ using WheresMyHomework.Data.Models;
 
 namespace WheresMyHomework.Core.Services.Homework;
 
-// TODO: Move to StudentHomeworkService
 public class HomeworkService(ApplicationDbContext context) : IHomeworkService
 {
     public async Task CreateHomeworkAsync(HomeworkRequestInfo info)
@@ -21,8 +21,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             ClassId = info.ClassId,
         };
         await context.HomeworkTasks.AddAsync(task);
-
-        // TODO: Find if anyway to do this with OnModelCreating
+        
         // Get all the students in the class
         var students = await context.Classes
             .Include(cls => cls.Students)
@@ -48,7 +47,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
         await context.SaveChangesAsync();
     }
 
-    public async Task<HomeworkResponseInfo> GetHomeworkInfoByIdAsync(int homeworkId)
+    public async Task<HomeworkResponseInfo> GetHomeworkById(int homeworkId)
     {
         var homeworkTask = await context.HomeworkTasks.Include(task => task.Class)
             .ThenInclude(cls => cls.Teacher).Include(homeworkTask => homeworkTask.Class)
@@ -72,10 +71,32 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             }
         };
     }
+    
+    public async Task<IEnumerable<HomeworkResponseInfo>> GetHomeworkByTeacherAsync(string teacherId)
+    {
+        return await context.HomeworkTasks
+            .Include(task => task.Class)
+            .Where(task => task.Class.TeacherId == teacherId)
+            .Select(task => new HomeworkResponseInfo
+            {
+                Title = task.Title,
+                Id = task.Id,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                SetDate = task.SetDate,
+                Class = new SchoolClassResponseInfo
+                {
+                    Name = task.Class.Name,
+                    Id = task.Class.Id,
+                    SubjectId = task.Class.SubjectId,
+                    TeacherId = teacherId
+                }
+            }).ToArrayAsync();
+    }
 
     public async Task<StudentHomeworkResponseInfo> GetStudentHomeworkInfoByIdAsync(int homeworkId, string studentId)
     {
-        var homeworkInfo = await GetHomeworkInfoByIdAsync(homeworkId);
+        var homeworkInfo = await GetHomeworkById(homeworkId);
         var studentHomeworkTask = await context.StudentHomeworkTasks
             .Where(task => task.Student.Id == studentId && task.HomeworkTask.Id == homeworkId)
             .Include(studentHomeworkTask => studentHomeworkTask.Todos)
@@ -176,7 +197,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
         return response;
     }
 
-    public async Task<ICollection<HomeworkResponseInfo>> GetHomeworkInfoByClassIdAsync(int classId)
+    public async Task<ICollection<HomeworkResponseInfo>> GetHomeworkByClassAsync(int classId)
     {
         return await context.HomeworkTasks.Include(task => task.Class)
             .ThenInclude(cls => cls.Teacher)
@@ -227,12 +248,31 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
         homeworkTask.Priority = priority;
         return await context.SaveChangesAsync() > 0;
     }
-}
 
-// Where(task => filter == null || // If there is a filter
-//               filter.Title == null ||
-//               filter.Title == string.Empty || // and the title is not empty
-//               ((filter.ExactMatch && // If exact match
-//                 task.HomeworkTask.Title == filter.Title) || // else
-//                task.HomeworkTask.Title.Contains(filter.Title)) &&
-//               filter.Priorities.Contains(task.Priority)) // Check if is of correct priority
+    public async Task<bool> UpdateDescriptionAsync(int homeworkId, string newDescription)
+    {
+        var homeworkTask = await context.HomeworkTasks.FindAsync(homeworkId);
+        if (homeworkTask is null) return false;
+        
+        homeworkTask.Description = newDescription;
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> UpdateTitleAsync(int homeworkId, string newTitle)
+    {
+        var homeworkTask = await context.HomeworkTasks.FindAsync(homeworkId);
+        if (homeworkTask is null) return false;
+        
+        homeworkTask.Title = newTitle;
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> UpdateDueDateAsync(int homeworkId, DateTime dueDate)
+    {
+        var homeworkTask = await context.HomeworkTasks.FindAsync(homeworkId);
+        if (homeworkTask is null) return false;
+        
+        homeworkTask.DueDate = dueDate;
+        return await context.SaveChangesAsync() > 0;
+    }
+}

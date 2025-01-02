@@ -7,6 +7,7 @@ public interface IStudentService
 {
     Task<UserInfo> GetStudentInfoAsync(string studentId);
     
-    Task<ICollection<UserInfo>> GetStudentInfoBySchoolAsync(int schoolId);
+    Task<ICollection<UserInfo>> GetStudentsBySchoolAsync(int schoolId);
 
+    Task<IEnumerable<UserInfo>?> GetStudentsByClassAsync(int classId);
 }

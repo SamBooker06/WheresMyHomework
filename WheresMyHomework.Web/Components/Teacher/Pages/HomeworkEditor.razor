@@ -1,0 +1,89 @@
+﻿@using System.ComponentModel.DataAnnotations
+
+@rendermode InteractiveServer
+
+@if (!_loadedSuccessfully)
+{
+    <p class="text-danger">There was a problem loading this task.</p>
+}
+else
+{
+    <PageTitle>Edit @Input.Title | WMH</PageTitle>
+
+    <h1>@Input.Title</h1>
+
+    <div class="alert alert-success" hidden="@(!_hasUpdated)">Updated homework!</div>
+
+    <section>
+        <EditForm Model="Input" method="post" OnValidSubmit="SubmitFormAsync" FormName="CreateHomework">
+            <DataAnnotationsValidator/>
+
+            <div class="row gx-3">
+                <div class="form-floating mb-3 col-md-6">
+                    <InputText @bind-Value="Input.Title" id="Input.Title" class="form-control" placeholder=" "/>
+                    <label for="Input.Title" class="form-label">Title</label>
+                    <ValidationMessage For="() => Input.Title"/>
+                </div>
+                <div class="form-floating mb-3 col-md-3">
+                    <InputDate @bind-Value="Input.DueDate" id="Input.DueDate"
+                               class="form-control" EnableMinMax="true" Min="@DateTime.Now.ToString("yyyy-MM-dd")"/>
+                    <label for="Input.DueDate">Due date</label>
+                    <ValidationMessage For="() => Input.DueDate">Homework must be set in the future</ValidationMessage>
+                </div>
+            </div>
+
+            <div class="row gx-3">
+                <div class="form-floating mb-3 col-md-6" style="min-height: 35vh; max-height: 50vh;">
+                    <InputTextArea @bind-Value="Input.Description" id="Input.Description" class="form-control h-100"/>
+                    <label for="Input.Description">Description</label>
+                    <ValidationMessage For="() => Input.Description"/>
+                </div>
+            </div>
+
+            <button class="btn btn-primary py-2 my-2" type="submit">Update homework</button>
+
+        </EditForm>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public required int HomeworkId { get; set; } = -1;
+    private HomeworkFormInput Input { get; set; } = new();
+
+    private bool _hasUpdated = false;
+    private bool _loadedSuccessfully = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HomeworkId == -1) return;
+
+        var homeworkInfo = await HomeworkService.GetHomeworkById(HomeworkId);
+
+        Input.Title = homeworkInfo.Title;
+        Input.Description = homeworkInfo.Description;
+        Input.DueDate = homeworkInfo.DueDate;
+        
+        _loadedSuccessfully = true;
+    }
+
+    private class HomeworkFormInput
+    {
+        [Required, MaxLength(40)] public string Title { get; set; } = string.Empty;
+
+        [Required, MinLength(5), MaxLength(500)]
+        public string Description { get; set; } = string.Empty;
+
+        [Required] public DateTime DueDate { get; set; } = DateTime.Now.Date;
+    }
+
+    private async Task SubmitFormAsync()
+    {
+        await HomeworkService.UpdateDescriptionAsync(HomeworkId, Input.Description);
+        await HomeworkService.UpdateTitleAsync(HomeworkId, Input.Title);
+        await HomeworkService.UpdateDueDateAsync(HomeworkId, Input.DueDate);
+
+        _hasUpdated = true;
+        StateHasChanged();
+    }
+
+}

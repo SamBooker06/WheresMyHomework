@@ -11,15 +11,16 @@ public static class SeedData
     {
         "Admin",
         "Teacher",
-        "Student"
+        "Student",
+        "SuperAdmin"
     };
 
     private const string AdminUserId = "Admin";
     private const string AdminPassword = "Admin$123";
-    
+
     private const string TeacherUserId = "Teacher";
     private const string TeacherPassword = "Teacher$123";
-    
+
     private const string StudentUserId = "Student";
     private const string StudentPassword = "Student$123";
 
@@ -83,7 +84,7 @@ public static class SeedData
             };
             var res = await userManager.CreateAsync(teacher, TeacherPassword);
             Debug.Assert(res.Succeeded);
-            
+
             await userManager.AddToRoleAsync(teacher, "Teacher");
         }
 
@@ -102,9 +103,8 @@ public static class SeedData
             };
             var res = await userManager.CreateAsync(student, StudentPassword);
             Debug.Assert(res.Succeeded);
-            
-            await userManager.AddToRoleAsync(student, "Student");
 
+            await userManager.AddToRoleAsync(student, "Student");
         }
     }
 
@@ -121,7 +121,6 @@ public static class SeedData
             Description = "Homework",
             DueDate = DateTime.Today + TimeSpan.FromDays(30),
             Class = schoolClass,
-            
         };
 
         await context.HomeworkTasks.AddAsync(homeworkTask);
@@ -190,11 +189,12 @@ public static class SeedData
     }
 
     public static async Task InitialiseDataAsync(ApplicationDbContext context,
-        RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
+        RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager,
+        bool seedTestData = false)
     {
         await context.Database.EnsureCreatedAsync();
 
         await InitialiseRolesAsync(roleManager);
-        await SeedBasicDataAsync(context, userManager);
+        if(seedTestData) await SeedBasicDataAsync(context, userManager);
     }
 }
