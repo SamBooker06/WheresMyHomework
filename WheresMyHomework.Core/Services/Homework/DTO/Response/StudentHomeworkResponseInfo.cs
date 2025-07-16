@@ -11,3 +11,4 @@ public record StudentHomeworkResponseInfo : HomeworkResponseInfo
     public required Priority Priority { get; init; }
     public required ICollection<TagResponseInfo> Tags { get; init; }
 }
+

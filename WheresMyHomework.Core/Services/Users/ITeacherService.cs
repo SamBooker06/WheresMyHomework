@@ -1,6 +1,4 @@
-﻿using WheresMyHomework.Data.Models.Users;
-
-namespace WheresMyHomework.Core.Services.Users;
+﻿namespace WheresMyHomework.Core.Services.Users;
 
 public interface ITeacherService
 {

@@ -1,6 +1,4 @@
-﻿@page "/Homework/Create"
-@using System.ComponentModel.DataAnnotations
-@using System.Diagnostics
+﻿@using System.ComponentModel.DataAnnotations
 @using WheresMyHomework.Core.Services.Class
 @using WheresMyHomework.Core.Services.Homework.DTO.Request
 @using WheresMyHomework.Core.Services.Homework.DTO.Response
@@ -9,87 +7,104 @@
 @inject IClassService ClassService
 @inject ISubjectService SubjectService
 
+@page "/Homework/Create"
+
 <PageTitle>Create homework | WMH</PageTitle>
 
-@if (_hasJustSubmitted)
+@if (hasJustSubmitted)
 {
     <p class="alert alert-success">Created homework!</p>
 }
 
-<section>
-    <EditForm Model="Input" method="post" OnValidSubmit="SubmitFormAsync" FormName="CreateHomework">
-        <DataAnnotationsValidator/>
+@if (classes is null || subjects is null)
+{
+    <div class="alert alert-danger">
+        There was a problem retrieving your classes and subjects
+    </div>
+}
+else
+{
+    <section>
+        <EditForm Model="Input" method="post" OnValidSubmit="CreateNewHomeworkTaskAsync" FormName="CreateHomework">
+            <DataAnnotationsValidator/>
 
-        <div class="row gx-3">
-            <div class="form-floating mb-3 col-md-6">
-                <InputText @bind-Value="Input.Title" id="Input.Title" class="form-control" placeholder=" "/>
-                <label for="Input.Title" class="form-label">Title</label>
-                <ValidationMessage For="() => Input.Title"/>
+            <div class="row gx-3">
+                @* Get title *@
+                <div class="form-floating mb-3 col-md-6">
+                    <InputText @bind-Value="Input.Title" id="Input.Title" class="form-control" placeholder=" "/>
+                    <label for="Input.Title" class="form-label">Title</label>
+                    <ValidationMessage For="() => Input.Title"/>
+                </div>
+
+                @* Due date *@
+                <div class="form-floating mb-3 col-md-3">
+                    <InputDate @bind-Value="Input.DueDate" id="Input.DueDate"
+                               class="form-control" EnableMinMax="true" Min="@DateTime.Now.ToString("yyyy-MM-dd")"/>
+                    <label for="Input.DueDate">Due date</label>
+                    <ValidationMessage For="() => Input.DueDate">Homework must be set in the future</ValidationMessage>
+                </div>
             </div>
-            <div class="form-floating mb-3 col-md-3">
-                <InputDate @bind-Value="Input.DueDate" id="Input.DueDate"
-                           class="form-control" EnableMinMax="true" Min="@DateTime.Now.ToString("yyyy-MM-dd")"/>
-                <label for="Input.DueDate">Due date</label>
-                <ValidationMessage For="() => Input.DueDate">Homework must be set in the future</ValidationMessage>
+
+            <div class="row gx-3">
+                @* Description *@
+                <div class="form-floating mb-3 col-md-6" style="min-height: 35vh; max-height: 50vh;">
+                    <InputTextArea @bind-Value="Input.Description" id="Input.Description" class="form-control h-100"/>
+                    <label for="Input.Description">Description</label>
+                    <ValidationMessage For="() => Input.Description"/>
+                </div>
+
+                @* Select class *@
+                <div class="form-floating col-md-3">
+                    <InputSelect @bind-Value="Input.ClassId" id="Input.ClassId" class="form-select">
+                        @foreach (var cls in classes)
+                        {
+                            var subjectName = subjects.First(subject => subject.Id == cls.SubjectId).Name;
+                            <option value="@cls.Id">@subjectName - @cls.Name</option>
+                        }
+                    </InputSelect>
+                    <label for="Input.ClassId">Class</label>
+                </div>
             </div>
-        </div>
 
-        <div class="row gx-3">
-            <div class="form-floating mb-3 col-md-6" style="min-height: 35vh; max-height: 50vh;">
-                <InputTextArea @bind-Value="Input.Description" id="Input.Description" class="form-control h-100"/>
-                <label for="Input.Description">Description</label>
-                <ValidationMessage For="() => Input.Description"/>
-            </div>
+            <button class="btn btn-primary py-2 my-2" type="submit">Create homework</button>
 
-            <div class="form-floating col-md-3">
-                <InputSelect @bind-Value="Input.ClassId" id="Input.ClassId" class="form-select">
-                    @foreach (var cls in Classes)
-                    {
-                        var subjectName = Subjects.First(subject => subject.Id == cls.SubjectId).Name;
-                        <option value="@cls.Id">@subjectName - @cls.Name</option>
-                    }
-                </InputSelect>
-                <label for="Input.ClassId">Class</label>
-            </div>
-        </div>
-
-        <button class="btn btn-primary py-2 my-2" type="submit">Create homework</button>
-
-    </EditForm>
-</section>
-
+        </EditForm>
+    </section>
+}
 @code {
     [SupplyParameterFromForm] private HomeworkFormInput Input { get; set; } = new();
-    private bool _hasJustSubmitted;
+    private bool hasJustSubmitted;
 
-    private IEnumerable<SchoolClassResponseInfo> Classes { get; set; } = null!;
-    private IEnumerable<SubjectResponseInfo> Subjects { get; set; } = null!;
+    private IEnumerable<SchoolClassResponseInfo>? classes;
+    private IEnumerable<SubjectResponseInfo>? subjects;
 
     protected override async Task OnInitializedAsync()
     {
         var authInfo = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
-        Debug.Assert(authInfo != null);
+        if (authInfo is null) return;
 
         var teacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
 
-        Classes = await ClassService.GetClassByTeacherAsync(teacherInfo.Id);
-        Subjects = await SubjectService.GetSubjectsAsync(teacherInfo.SchoolId);
+        classes = await ClassService.GetClassByTeacherAsync(teacherInfo.Id);
+        subjects = await SubjectService.GetSubjectsAsync(teacherInfo.SchoolId);
     }
 
-    private async Task SubmitFormAsync()
+    private async Task CreateNewHomeworkTaskAsync()
     {
-        _hasJustSubmitted = true;
+        hasJustSubmitted = true;
 
-        await HomeworkService.CreateHomeworkAsync(new HomeworkRequestInfo
+        var newTask = new HomeworkRequestInfo
         {
             Title = Input.Title,
             Description = Input.Description,
             ClassId = Input.ClassId,
             SetDate = DateTime.Now.Date,
             DueDate = Input.DueDate
-        });
+        };
+        await HomeworkService.CreateHomeworkAsync(newTask);
 
-        Input = new();
+        // Reset form
+        Input = new HomeworkFormInput();
     }
 
     private class HomeworkFormInput
@@ -104,3 +119,4 @@
     }
 
 }
+

@@ -1,15 +1,41 @@
-﻿using System.Collections.Immutable;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using WheresMyHomework.Core.Services.Homework.DTO;
 using WheresMyHomework.Core.Services.Homework.DTO.Request;
 using WheresMyHomework.Core.Services.Homework.DTO.Response;
 using WheresMyHomework.Data;
 using WheresMyHomework.Data.Models;
+using WheresMyHomework.Data.Models.Users;
 
 namespace WheresMyHomework.Core.Services.Homework;
 
 public class HomeworkService(ApplicationDbContext context) : IHomeworkService
 {
+    public async Task CreateStudentHomeworkTaskAsync(HomeworkRequestInfo info, string studentId)
+    {
+        var task = new HomeworkTask
+        {
+            Title = info.Title,
+            Description = info.Description,
+            DueDate = info.DueDate,
+            SetDate = info.SetDate,
+            ClassId = info.ClassId,
+        };
+        // Wiss bombaclat dog i am
+        var student = new Student
+        {
+            Id = studentId,
+        };
+        // context.Attach(student);
+
+        await context.StudentHomeworkTasks.AddAsync(new StudentHomeworkTask
+        {
+            Student = student,
+            HomeworkTask = task,
+        });
+
+        await context.SaveChangesAsync();
+    }
+
     public async Task CreateHomeworkAsync(HomeworkRequestInfo info)
     {
         var task = new HomeworkTask
@@ -20,8 +46,9 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             SetDate = info.SetDate,
             ClassId = info.ClassId,
         };
+
         await context.HomeworkTasks.AddAsync(task);
-        
+
         // Get all the students in the class
         var students = await context.Classes
             .Include(cls => cls.Students)
@@ -71,7 +98,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             }
         };
     }
-    
+
     public async Task<IEnumerable<HomeworkResponseInfo>> GetHomeworkByTeacherAsync(string teacherId)
     {
         return await context.HomeworkTasks
@@ -94,40 +121,42 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
             }).ToArrayAsync();
     }
 
-    public async Task<StudentHomeworkResponseInfo> GetStudentHomeworkInfoByIdAsync(int homeworkId, string studentId)
+    public async Task<StudentHomeworkResponseInfo?> GetStudentHomeworkInfoByIdAsync(int homeworkId, string studentId)
     {
         var homeworkInfo = await GetHomeworkById(homeworkId);
         var studentHomeworkTask = await context.StudentHomeworkTasks
             .Where(task => task.Student.Id == studentId && task.HomeworkTask.Id == homeworkId)
             .Include(studentHomeworkTask => studentHomeworkTask.Todos)
             .Include(studentHomeworkTask => studentHomeworkTask.Tags)
-            .FirstAsync();
+            .FirstOrDefaultAsync();
 
-        return new StudentHomeworkResponseInfo
-        {
-            Title = homeworkInfo.Title,
-            Id = homeworkInfo.Id,
-            StudentHomeworkId = studentHomeworkTask.Id,
-            Class = homeworkInfo.Class,
-            Notes = studentHomeworkTask.Notes,
-            IsComplete = studentHomeworkTask.IsComplete,
-            Description = homeworkInfo.Description,
-            DueDate = homeworkInfo.DueDate,
-            SetDate = homeworkInfo.SetDate,
-            Priority = studentHomeworkTask.Priority,
-            Tags = studentHomeworkTask.Tags.Select(tag => new TagResponseInfo
+        return studentHomeworkTask is not null
+            ? new StudentHomeworkResponseInfo
             {
-                Name = tag.Name,
-                StudentId = studentHomeworkTask.StudentId,
-            }).ToList(),
-            Todos = studentHomeworkTask.Todos
-                .Select(todo => new TodoResponseInfo
+                Title = homeworkInfo.Title,
+                Id = homeworkInfo.Id,
+                StudentHomeworkId = studentHomeworkTask.Id,
+                Class = homeworkInfo.Class,
+                Notes = studentHomeworkTask.Notes,
+                IsComplete = studentHomeworkTask.IsComplete,
+                Description = homeworkInfo.Description,
+                DueDate = homeworkInfo.DueDate,
+                SetDate = homeworkInfo.SetDate,
+                Priority = studentHomeworkTask.Priority,
+                Tags = studentHomeworkTask.Tags.Select(tag => new TagResponseInfo
                 {
-                    Description = todo.Description,
-                    IsComplete = todo.IsComplete,
-                    Id = todo.Id
-                }).ToList()
-        };
+                    Name = tag.Name,
+                    StudentId = studentHomeworkTask.StudentId,
+                }).ToList(),
+                Todos = studentHomeworkTask.Todos
+                    .Select(todo => new TodoResponseInfo
+                    {
+                        Description = todo.Description,
+                        IsComplete = todo.IsComplete,
+                        Id = todo.Id
+                    }).ToList()
+            }
+            : null;
     }
 
     public async Task<ICollection<StudentHomeworkResponseInfo>> GetStudentHomeworkAsync(string studentId,
@@ -171,29 +200,37 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
                     Id = todo.Id
                 }).ToList()
             });
-        
+
+        // If there are priorities, modify query to only include tasks with matching priorities
         if (filter?.Priorities.Count > 0)
         {
             query = query.Where(task => filter.Priorities.Contains(task.Priority));
         }
 
-
+        // Get all the entries in the DB matching this query
         var response = await query.ToArrayAsync();
-        
+
+        // Filter out any tasks without the matching tags, if there are any
+        // This needs to be done after the query is run since the chosen backend (sqlite) does not support the statement
+        // required to apply it directly to the query
         if (filter?.Tags.Count > 0)
         {
             response = response.Where(task => task.Tags.Any(tag => filter.Tags.Contains(tag.Name))).ToArray();
         }
 
 
+        // Apply the title filter, if there is any
+        // CurrentCultureIgnoreCase is used to ignore any capital letters when comparing the string and is built into
+        // the standard library
         if (filter?.Title is not null && !string.IsNullOrWhiteSpace(filter.Title))
         {
             response = (filter.ExactMatch
-                    ? response.Where(task => task.Title.Equals(filter.Title, StringComparison.CurrentCultureIgnoreCase))
-                    : response.Where(task =>
-                        task.Title.Contains(filter.Title, StringComparison.CurrentCultureIgnoreCase))).ToArray();
+                ? response.Where(task => task.Title.Equals(filter.Title, StringComparison.CurrentCultureIgnoreCase))
+                : response.Where(task =>
+                    task.Title.Contains(filter.Title, StringComparison.CurrentCultureIgnoreCase))).ToArray();
         }
 
+        // After all filters are applied, return the tasks which were not filtered out
         return response;
     }
 
@@ -253,7 +290,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
     {
         var homeworkTask = await context.HomeworkTasks.FindAsync(homeworkId);
         if (homeworkTask is null) return false;
-        
+
         homeworkTask.Description = newDescription;
         return await context.SaveChangesAsync() > 0;
     }
@@ -262,7 +299,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
     {
         var homeworkTask = await context.HomeworkTasks.FindAsync(homeworkId);
         if (homeworkTask is null) return false;
-        
+
         homeworkTask.Title = newTitle;
         return await context.SaveChangesAsync() > 0;
     }
@@ -271,7 +308,7 @@ public class HomeworkService(ApplicationDbContext context) : IHomeworkService
     {
         var homeworkTask = await context.HomeworkTasks.FindAsync(homeworkId);
         if (homeworkTask is null) return false;
-        
+
         homeworkTask.DueDate = dueDate;
         return await context.SaveChangesAsync() > 0;
     }

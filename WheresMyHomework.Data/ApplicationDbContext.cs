@@ -21,13 +21,6 @@ public class ApplicationDbContext(
 
     public required DbSet<Message> Messages { get; init; }
     public required DbSet<Tag> Tags { get; init; }
-    
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-        optionsBuilder.EnableSensitiveDataLogging();
-        optionsBuilder.EnableDetailedErrors();
-    }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -60,13 +53,12 @@ public class ApplicationDbContext(
             .HasMany(task => task.StudentHomeworkTasks)
             .WithOne(studentTask => studentTask.HomeworkTask)
             .OnDelete(DeleteBehavior.Cascade); // Ensure referential integrity
-
-
         
         builder.Entity<Tag>()
             .HasMany(tag => tag.StudentHomeworkTasks)
             .WithMany(task => task.Tags);
 
+        // Create a composite key composed of the tag name and the student id
         builder.Entity<Tag>()
             .HasKey(tag => new { tag.Name, tag.StudentId });
 
@@ -76,3 +68,4 @@ public class ApplicationDbContext(
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+

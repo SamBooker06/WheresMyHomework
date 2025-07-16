@@ -11,7 +11,7 @@
 
 <h3>Create Subject</h3>
 
-@if (_hasJustCreated)
+@if (hasJustCreated)
 {
     <p class="alert alert-success">Created subject!</p>
 }
@@ -36,21 +36,21 @@
 
     [SupplyParameterFromForm] private InputModel Input { get; set; } = new();
 
-    private IEnumerable<SubjectResponseInfo> _subjects = null!;
-    private IEnumerable<TeacherInfo> _teachers = null!;
-    private bool _hasJustCreated;
+    private IEnumerable<SubjectResponseInfo> subjects = null!;
+    private IEnumerable<TeacherInfo> teachers = null!;
+    private bool hasJustCreated;
 
-    private UserInfo _adminInfo = null!;
+    private UserInfo adminInfo = null!;
 
     protected override async Task OnInitializedAsync()
     {
         var authInfo = await AdminAuthService.GetAuthenticatedUserInfoAsync();
         Debug.Assert(authInfo != null);
 
-        _adminInfo = await AdminService.GetAdminInfoAsync(authInfo.UserId);
+        adminInfo = await AdminService.GetAdminInfoAsync(authInfo.UserId);
 
-        _subjects = await SubjectService.GetSubjectsAsync(_adminInfo.SchoolId);
-        _teachers = (await TeacherService.GetTeachersFromSchoolAsync(_adminInfo.SchoolId)).OrderBy(teacher => teacher.LastName);
+        subjects = await SubjectService.GetSubjectsAsync(adminInfo.SchoolId);
+        teachers = (await TeacherService.GetTeachersFromSchoolAsync(adminInfo.SchoolId)).OrderBy(teacher => teacher.LastName);
     }
 
     private async Task SubmitFormAsync()
@@ -58,12 +58,12 @@
         await SubjectService.CreateSubjectAsync(new SubjectCreateInfo
         {
             Name = Input.Name,
-            SchoolId = _adminInfo.SchoolId
+            SchoolId = adminInfo.SchoolId
         });
 
         // Reset form
-        Input = new();
-        _hasJustCreated = true;
+        Input = new InputModel();
+        hasJustCreated = true;
     }
 
     private class InputModel

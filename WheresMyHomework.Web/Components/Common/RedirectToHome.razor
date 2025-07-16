@@ -1,0 +1,13 @@
+﻿@inject NavigationManager NavigationManager
+
+@* If the user visit a page for which they must be signed in, forcefully take them to the home page *@
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.NavigateTo(string.Empty, forceLoad: true);
+    }
+
+}
+

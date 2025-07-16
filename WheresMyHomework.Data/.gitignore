@@ -750,3 +750,7 @@ FodyWeavers.xsd
 !/app.db-shm
 
 !/app.db-wal
+
+
+
+app.db

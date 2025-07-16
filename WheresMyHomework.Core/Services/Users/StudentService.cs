@@ -7,7 +7,7 @@ namespace WheresMyHomework.Core.Services.Users;
 
 public class StudentService(ApplicationDbContext context) : IStudentService
 {
-    public async Task<UserInfo> GetStudentInfoAsync(string studentId)
+    public async Task<UserInfo?> GetStudentInfoAsync(string studentId)
     {
         return await context.Users.OfType<Student>()
             .Where(student => student.Id == studentId)

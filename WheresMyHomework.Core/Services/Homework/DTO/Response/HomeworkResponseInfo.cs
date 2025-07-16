@@ -11,3 +11,4 @@ public record HomeworkResponseInfo
     public required string Description { get; init; }
     public required SchoolClassResponseInfo Class { get; init; }
 }
+

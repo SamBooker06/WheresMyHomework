@@ -6,38 +6,37 @@
 
 <PageTitle>Home | WMH</PageTitle>
 
-@if (_isStudent)
+@if (isStudent)
 {
     Navigator.NavigateTo("Homework");
 }
-else if (_isTeacher)
+else if (isTeacher)
 {
     <TeacherDashboard/>
 }
-else if (_isAdmin)
+else if (isAdmin)
 {
     <AdminDashboard/>
 }
 
 else
 {
-    <p>Already have an account? <a href="/Account/Login">Login</a> </p>
+    <p>Already have an account? <a href="/Login">Login</a> </p>
     <p>Or <a href="/Join">Sign up</a></p>
 }
 
 @code {
-    private bool _isStudent;
-    private bool _isTeacher;
-    private bool _isAdmin;
+    private bool isStudent;
+    private bool isTeacher;
+    private bool isAdmin;
 
     protected override async Task OnInitializedAsync()
     {
-        _isStudent = await StudentAuthService.IsAuthenticatedAsync();
-        _isTeacher = await TeacherAuthService.IsAuthenticatedAsync();
-        _isAdmin = await AdminAuthService.IsAuthenticatedAsync();
-
-        // This needs to go here otherwise throws NavigationError (bug) - https://github.com/aspnet/AspNetCore/issues/13582
-        // if (!(_isStudent || _isTeacher || _isAdmin)) Navigator.NavigateTo("Account/Login");
+        isStudent = await StudentAuthService.IsAuthenticatedAsync();
+        isTeacher = await TeacherAuthService.IsAuthenticatedAsync();
+        isAdmin = await AdminAuthService.IsAuthenticatedAsync();
+        
     }
 
 }
+

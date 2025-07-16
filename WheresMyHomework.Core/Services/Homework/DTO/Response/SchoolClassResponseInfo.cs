@@ -1,6 +1,4 @@
-﻿using WheresMyHomework.Core.Services.Users;
-
-namespace WheresMyHomework.Core.Services.Homework.DTO.Response;
+﻿namespace WheresMyHomework.Core.Services.Homework.DTO.Response;
 
 public record SchoolClassResponseInfo
 {
@@ -9,3 +7,4 @@ public record SchoolClassResponseInfo
     public required  int SubjectId { get; init; }
     public required string TeacherId { get; init; }
 }
+

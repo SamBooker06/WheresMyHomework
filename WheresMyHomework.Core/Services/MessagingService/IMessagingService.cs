@@ -7,3 +7,4 @@ public interface IMessagingService
 
     Task<bool> SendMessageAsync(MessageRequest msgRequest);
 }
+

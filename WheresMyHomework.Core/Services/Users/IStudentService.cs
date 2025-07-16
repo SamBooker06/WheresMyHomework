@@ -5,7 +5,7 @@ namespace WheresMyHomework.Core.Services.Users;
 
 public interface IStudentService
 {
-    Task<UserInfo> GetStudentInfoAsync(string studentId);
+    Task<UserInfo?> GetStudentInfoAsync(string studentId);
     
     Task<ICollection<UserInfo>> GetStudentsBySchoolAsync(int schoolId);
 

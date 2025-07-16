@@ -16,10 +16,10 @@
 
 <PageTitle>Manage your classes | WMH</PageTitle>
 
-@if (_teacher is not null
-     && _classes is not null
-     && _students is not null
-     && _subjects is not null)
+@if (teacher is not null
+     && classes is not null
+     && students is not null
+     && subjects is not null)
 {
     <div class="container-fluid">
         <div class="row">
@@ -29,12 +29,15 @@
 
                     <ul class="list-group">
 
-                        @foreach (var cls in _classes)
+                        @foreach (var cls in classes)
                         {
-                            <li class="list-group-item">
+                            <li class="list-group-item" @key="cls.Id">
                                 <div class="d-flex justify-content-between align-items-center text-center">
-                                    <h5 class="fw-semibold text-info-emphasis d-inline" style="margin: 0;">@cls.Name</h5>
-                                    <button class="btn btn-outline-primary" @onclick="() => GoToClassManagementAsync(cls.Id)">Manage</button>
+                                    <h5 class="fw-semibold text-info-emphasis d-inline"
+                                        style="margin: 0;">@cls.Name</h5>
+                                    <button class="btn btn-outline-primary"
+                                            @onclick="() => GoToClassManagementAsync(cls.Id)">Manage
+                                    </button>
                                 </div>
                             </li>
                         }
@@ -42,10 +45,10 @@
                 </article>
             </main>
 
-            @if (_displayClassCreator)
+            @if (displayClassCreator)
             {
                 <aside class="col-md-6">
-                    @if (_hasCreatedClass)
+                    @if (hasCreatedClass)
                     {
                         <div class="alert alert-success">
                             <p>Created class!</p>
@@ -62,14 +65,15 @@
                             <div class="col-md-6 form-floating mb-3">
                                 <InputText class="form-control" placeholder=" " id="class-name-input"
                                            @bind-Value="NewClass.Name"/>
-                                
+
                                 <label for="class-name-input" class="form-label">Class name</label>
                             </div>
 
                             <div class="col-md-6 form-floating mb-3">
-                                <InputSelect id="subject-input" class="form-control form-select" placeholder=" " TValue="int"
+                                <InputSelect id="subject-input" class="form-control form-select" placeholder=" "
+                                             TValue="int"
                                              @bind-Value="NewClass.SubjectId">
-                                    @foreach (var subject in _subjects)
+                                    @foreach (var subject in subjects)
                                     {
                                         <option value="@subject.Id">@subject.Name</option>
                                     }
@@ -78,9 +82,10 @@
                             </div>
 
                             <div class="col-md-6 form-floating mb-3">
-                                <MultiSelect CssClass="my-2" TItem="UserInfo" Title="Students" Items="_students"
+                                <MultiSelect CssClass="my-2" TItem="UserInfo" Title="Students" Items="students"
                                              SelectedItems="NewClass.Students"
-                                             ItemTransformer=@(student => $"{student.LastName}, {student.FirstName}") MaxHeight="40"/>
+                                             ItemTransformer=@(student => $"{student.LastName}, {student.FirstName}")
+                                             MaxHeight="40"/>
 
                                 <button class="btn btn-primary w-100" type="submit">Create!</button>
                             </div>
@@ -99,15 +104,14 @@ else
 }
 
 @code {
-    private TeacherInfo? _teacher;
-    private IEnumerable<UserInfo>? _students;
-    private IEnumerable<SchoolClassResponseInfo>? _classes;
-    private IEnumerable<SubjectResponseInfo>? _subjects;
+    private TeacherInfo? teacher;
+    private IEnumerable<UserInfo>? students;
+    private List<SchoolClassResponseInfo>? classes;
+    private IEnumerable<SubjectResponseInfo>? subjects;
 
     private NewClassModel NewClass { get; set; } = new();
-
-    private bool _hasCreatedClass;
-    private bool _displayClassCreator;
+    private bool hasCreatedClass;
+    private bool displayClassCreator;
 
     protected override async Task OnInitializedAsync()
     {
@@ -118,35 +122,51 @@ else
             return;
         }
 
-        _teacher = await TeacherService.GetTeacherInfoAsync(teacherAuth.UserId);
-        _classes = await ClassService.GetClassByTeacherAsync(_teacher.Id);
-        _students = (await StudentService.GetStudentsBySchoolAsync(_teacher.SchoolId)).OrderBy(student => student.LastName + student.LastName);
-        _subjects = await SubjectService.GetSubjectsAsync(_teacher.SchoolId);
+        teacher = await TeacherService.GetTeacherInfoAsync(teacherAuth.UserId);
+        classes = (await ClassService.GetClassByTeacherAsync(teacher.Id)).ToList();
+        students = (await StudentService.GetStudentsBySchoolAsync(teacher.SchoolId)).OrderBy(student => student.LastName + student.LastName);
+        subjects = await SubjectService.GetSubjectsAsync(teacher.SchoolId);
     }
 
     private void DisplayClassCreator()
     {
-        _displayClassCreator = true;
+        displayClassCreator = true;
     }
 
     private async Task CreateNewClassAsync()
     {
-        if (_teacher is null)
+        if (teacher is null)
         {
             Logger.LogError("Teacher is null while creating a new class");
             return;
         }
 
-        await ClassService.CreateClassAsync(new CreateClassInfo
+        if (classes is null)
+        {
+            Logger.LogError("Could not retrieve existing classes when attempting to create new class");
+            return;
+        }
+
+        var cls = await ClassService.CreateClassAsync(new CreateClassInfo
         {
             ClassName = NewClass.Name,
             SubjectId = NewClass.SubjectId,
-            TeacherId = _teacher.Id,
+            TeacherId = teacher.Id,
             StudentIds = NewClass.Students.Select(student => student.Id).ToList()
         });
 
+        if (cls is null)
+        {
+            Logger.LogError("An attempt to create the class was made, but no class could be returned");
+            return;
+        }
+        
+        classes.Add(cls);
 
-        _hasCreatedClass = true;
+
+        hasCreatedClass = true;
+        
+        // Reset form
         NewClass = new NewClassModel();
     }
 
@@ -155,7 +175,7 @@ else
     {
         [MinLength(2), MaxLength(15)] public string Name { get; set; } = string.Empty;
 
-        public List<UserInfo> Students = [];
+        public readonly List<UserInfo> Students = [];
 
         [Required] public int SubjectId { get; set; }
     }

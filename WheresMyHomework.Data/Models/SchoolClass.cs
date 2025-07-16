@@ -22,3 +22,4 @@ public class SchoolClass
 
     public ICollection<Student> Students { get; init; } = [];
 }
+

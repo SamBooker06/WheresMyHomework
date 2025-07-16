@@ -22,4 +22,5 @@ public class AdminService(ApplicationDbContext context) : IAdminService
 
 public record AdminInfo : UserInfo
 {
+    // This is empty but allows for adding additional data specific to admin users
 }

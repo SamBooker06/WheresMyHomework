@@ -20,4 +20,8 @@
       <Folder Include="Services\Homework\DTO\Update\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.2" />
+    </ItemGroup>
+
 </Project>

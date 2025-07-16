@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using WheresMyHomework.Data.Models;
 using WheresMyHomework.Data.Models.Users;
 
@@ -8,21 +7,12 @@ namespace WheresMyHomework.Data;
 public static class SeedData
 {
     private static readonly string[] RolesNames =
-    {
+    [
         "Admin",
         "Teacher",
         "Student",
         "SuperAdmin"
-    };
-
-    private const string AdminUserId = "Admin";
-    private const string AdminPassword = "Admin$123";
-
-    private const string TeacherUserId = "Teacher";
-    private const string TeacherPassword = "Teacher$123";
-
-    private const string StudentUserId = "Student";
-    private const string StudentPassword = "Student$123";
+    ];
 
     private static async Task InitialiseRolesAsync(
         RoleManager<IdentityRole> roleManager)
@@ -64,7 +54,7 @@ public static class SeedData
                 EmailConfirmed = true,
             };
             var res = await userManager.CreateAsync(admin, AdminPassword);
-            Debug.Assert(res.Succeeded);
+            if (!res.Succeeded) return;
 
             await userManager.AddToRoleAsync(admin, "Admin");
         }
@@ -83,7 +73,7 @@ public static class SeedData
                 EmailConfirmed = true
             };
             var res = await userManager.CreateAsync(teacher, TeacherPassword);
-            Debug.Assert(res.Succeeded);
+            if (!res.Succeeded) return;
 
             await userManager.AddToRoleAsync(teacher, "Teacher");
         }
@@ -102,7 +92,7 @@ public static class SeedData
                 EmailConfirmed = true
             };
             var res = await userManager.CreateAsync(student, StudentPassword);
-            Debug.Assert(res.Succeeded);
+            if (!res.Succeeded) return;
 
             await userManager.AddToRoleAsync(student, "Student");
         }
@@ -112,8 +102,7 @@ public static class SeedData
     {
         if (await context.HomeworkTasks.FindAsync(1) is not null) return;
 
-        var student = (await context.Users.FindAsync(StudentUserId)) as Student;
-        Debug.Assert(student != null);
+        if ((await context.Users.FindAsync(StudentUserId)) is not Student student) return;
 
         var homeworkTask = new HomeworkTask
         {
@@ -145,6 +134,7 @@ public static class SeedData
 
         var subject = await SeedSubject(context, school);
         var schoolClass = await SeedClassAsync(context, subject);
+        if (schoolClass is null) return;
 
         await SeedHomeworkTask(context, schoolClass);
     }
@@ -165,15 +155,14 @@ public static class SeedData
         return subject;
     }
 
-    private static async Task<SchoolClass> SeedClassAsync(ApplicationDbContext context, Subject subject)
+    private static async Task<SchoolClass?> SeedClassAsync(ApplicationDbContext context, Subject subject)
     {
         var foundClass = await context.Classes.FindAsync(1);
         if (foundClass is not null) return foundClass;
 
         var teacher = (await context.Users.FindAsync(TeacherUserId)) as Teacher;
         var student = (await context.Users.FindAsync(StudentUserId)) as Student;
-        Debug.Assert(teacher != null);
-        Debug.Assert(student != null);
+        if (teacher is null || student is null) return null;
 
         var schoolClass = new SchoolClass
         {
@@ -197,4 +186,13 @@ public static class SeedData
         await InitialiseRolesAsync(roleManager);
         if(seedTestData) await SeedBasicDataAsync(context, userManager);
     }
+    
+    private const string AdminUserId = "Admin";
+    private const string AdminPassword = "Admin$123";
+
+    private const string TeacherUserId = "Teacher";
+    private const string TeacherPassword = "Teacher$123";
+
+    private const string StudentUserId = "Student";
+    private const string StudentPassword = "Student$123";
 }

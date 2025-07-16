@@ -5,3 +5,4 @@ public interface IAuthService
     Task<AuthInfo?> GetAuthenticatedUserInfoAsync();
     Task<bool> IsAuthenticatedAsync();
 }
+

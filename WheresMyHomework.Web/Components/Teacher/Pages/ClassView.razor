@@ -11,24 +11,31 @@
 @page "/Classes/{ClassId:int}"
 
 
-@if (_classInfo is null || _teacherInfo is null || _students is null || _homework is null)
+@if (classInfo is null || teacherInfo is null || students is null || homework is null)
 {
     <PageTitle>There was a problem getting your class info | WMH</PageTitle>
     <p class="text-danger">Sorry, there was a problem getting your info</p>
 }
 else
 {
-    <PageTitle>Manage @_classInfo.Name | WMH</PageTitle>
+    <PageTitle>Manage @classInfo.Name | WMH</PageTitle>
 
-    <h1>Manage @_classInfo.Name</h1>
+    <h1>Manage @classInfo.Name</h1>
 
     <main class="pt-2">
         <article class="mt-2 row gx-2 mh-100">
+            @if (HasDeleted)
+            {
+                <div class="alert alert-danger">
+                    Successfully deleted homework task
+                </div>
+            }
+
             <section class="card col-md-5 mb-2 p-2 me-4">
                 <h5 class="card-title mb-2 ms-2">View students</h5>
 
                 <span class="d-inline-flex align-items-center justify-content-around my-2">
-                    <MultiSelect TItem="UserInfo" Items="_availableStudents" SelectedItems="_students"
+                    <MultiSelect TItem="UserInfo" Items="availableStudents" SelectedItems="students"
                                  Title="Manage Students"
                                  MaxHeight="30" ItemTransformer=@(student => $"{student.LastName}, {student.FirstName}")
                                  CssClass="col-md-4"/>
@@ -39,10 +46,11 @@ else
                 <hr>
 
                 <ul class="list-group">
-                    @foreach (var student in _students)
+                    @foreach (var student in students)
                     {
-                        <li class="list-group-item d-flex align-items-center text-center" style="cursor:pointer;"
-                            @onclick="() => GoToChat(student)">
+                        <li class="list-group-item d-flex align-items-center text-center"
+                            @onclick="() => GoToChat(student)"
+                            style="cursor:pointer;">
                             <i class="bi bi-person-fill"></i>
                             <p class="text-center text-info-emphasis fw-semibold mb-0 ms-2">@student.LastName, @student.FirstName</p>
                         </li>
@@ -54,7 +62,7 @@ else
                 <h5 class="card-title mb-2 ms-2">View homework</h5>
                 <hr>
                 <article>
-                    @foreach (var task in _homework)
+                    @foreach (var task in homework)
                     {
                         <TeacherHomeworkEntry HomeworkInfo="task" OnClick="() => GoToHomeworkEditor(task.Id)"/>
                     }
@@ -65,16 +73,17 @@ else
 }
 
 @code {
+    [Parameter, SupplyParameterFromQuery] public bool HasDeleted { get; set; }
     [Parameter] public int ClassId { get; set; }
 
-    private UserInfo? _teacherInfo;
-    private SchoolClassResponseInfo? _classInfo;
+    private UserInfo? teacherInfo;
+    private SchoolClassResponseInfo? classInfo;
 
-    private IList<UserInfo>? _students;
-    private IReadOnlyCollection<UserInfo>? _originalStudents;
-    private IEnumerable<UserInfo>? _availableStudents = [];
+    private IList<UserInfo>? students;
+    private IReadOnlyCollection<UserInfo>? originalStudents;
+    private IEnumerable<UserInfo>? availableStudents = [];
 
-    private IEnumerable<HomeworkResponseInfo>? _homework;
+    private IEnumerable<HomeworkResponseInfo>? homework;
 
 
     protected override async Task OnInitializedAsync()
@@ -82,47 +91,47 @@ else
         var authInfo = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
         if (authInfo is null) return;
 
-        _teacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
+        teacherInfo = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
 
-        _classInfo = await ClassService.GetClassByIdAsync(ClassId);
-        if (_classInfo?.TeacherId != authInfo.UserId)
+        classInfo = await ClassService.GetClassByIdAsync(ClassId);
+        if (classInfo?.TeacherId != authInfo.UserId)
         {
-            _classInfo = null;
+            classInfo = null;
             return;
         }
 
-        _students = (await StudentService.GetStudentsByClassAsync(_classInfo.Id))
+        students = (await StudentService.GetStudentsByClassAsync(classInfo.Id))
             ?.OrderBy(student => $"{student.LastName}{student.FirstName}").ToList();
-        _originalStudents = _students?.ToList();
-        _availableStudents = (await StudentService.GetStudentsBySchoolAsync(_teacherInfo.SchoolId))
+        originalStudents = students?.ToList();
+        availableStudents = (await StudentService.GetStudentsBySchoolAsync(teacherInfo.SchoolId))
             .OrderBy(student => $"{student.LastName}{student.FirstName}");
 
-        _homework = await HomeworkService.GetHomeworkByClassAsync(ClassId);
+        homework = await HomeworkService.GetHomeworkByClassAsync(ClassId);
     }
 
     private async Task UpdateClassMembersAsync()
     {
-        if (_classInfo is null) return;
+        if (classInfo is null) return;
 
         var changeMap = GetStudentChanges();
         if (changeMap is null) return;
 
         foreach (var newStudent in changeMap.NewStudents)
         {
-            await ClassService.AddStudentToClass(_classInfo.Id, newStudent.Id);
+            await ClassService.AddStudentToClass(classInfo.Id, newStudent.Id);
         }
 
         foreach (var removedStudent in changeMap.RemovedStudents)
         {
-            await ClassService.RemoveStudentFromClass(_classInfo.Id, removedStudent.Id);
+            await ClassService.RemoveStudentFromClass(classInfo.Id, removedStudent.Id);
         }
     }
 
     private ChangeMap? GetStudentChanges()
     {
-        if (_originalStudents is null || _students is null) return null;
+        if (originalStudents is null || students is null) return null;
 
-        return new ChangeMap(_originalStudents, _students);
+        return new ChangeMap(originalStudents, students);
     }
 
     private class ChangeMap
@@ -157,5 +166,6 @@ else
     {
         Navigator.NavigateTo($"/Chat/{student.Id}/{student.FirstName} {student.LastName}");
     }
+
 
 }

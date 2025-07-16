@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using Microsoft.EntityFrameworkCore;
-using WheresMyHomework.Core.Services.Homework.DTO;
+﻿using WheresMyHomework.Core.Services.Homework.DTO;
 using WheresMyHomework.Data;
 using WheresMyHomework.Data.Models;
 
@@ -8,10 +6,10 @@ namespace WheresMyHomework.Core.Services.TodoService;
 
 public class TodoService(ApplicationDbContext context) : ITodoService
 {
-    public async Task<TodoResponseInfo> CreateNewTodoAsync(TodoRequestInfo todo)
+    public async Task<TodoResponseInfo?> CreateNewTodoAsync(TodoRequestInfo todo)
     {
-        var task = await context.StudentHomeworkTasks.FindAsync(todo.StudentHomeworkTaskId); 
-        Debug.Assert(task != null);
+        var task = await context.StudentHomeworkTasks.FindAsync(todo.StudentHomeworkTaskId);
+        if (task is null) return null;
 
         var todoEntity = new Todo
         {
@@ -23,6 +21,7 @@ public class TodoService(ApplicationDbContext context) : ITodoService
         task.Todos.Add(todoEntity);
 
         await context.SaveChangesAsync();
+        
         return new TodoResponseInfo
         {
             Description = todoEntity.Description,

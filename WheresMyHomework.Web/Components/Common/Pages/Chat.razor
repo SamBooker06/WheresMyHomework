@@ -13,16 +13,16 @@
 
 @rendermode InteractiveServer
 
-<PageTitle>@_pageTitle</PageTitle>
+<PageTitle>@pageTitle</PageTitle>
 
-@if (_sender is null || _receiver is null)
+@if (sender is null || receiver is null)
 {
     <h5 class="text-danger">A user must be provided</h5>
 }
 else
 {
     <div class="h-100 m-2 d-flex flex-column align-items-center">
-        <Messenger Sender="_sender" Receiver="_receiver"/>
+        <Messenger Sender="sender" Receiver="receiver"/>
     </div>
 }
 
@@ -30,10 +30,10 @@ else
     [Parameter] public string? ReceiverUserId { get; set; }
     [Parameter] public string? _ { init; get; }
     
-    private UserInfo? _sender;
-    private UserInfo? _receiver;
+    private UserInfo? sender;
+    private UserInfo? receiver;
 
-    private string _pageTitle = "There was a problem loading your chat | WMH";
+    private string pageTitle = "There was a problem loading your chat | WMH";
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,20 +44,20 @@ else
             var authInfo = await StudentAuthService.GetAuthenticatedUserInfoAsync();
             if (authInfo is null) return;
 
-            _sender = await StudentService.GetStudentInfoAsync(authInfo.UserId);
+            sender = await StudentService.GetStudentInfoAsync(authInfo.UserId);
         } 
         else if (await TeacherAuthService.IsAuthenticatedAsync())
         {
             var authInfo = await TeacherAuthService.GetAuthenticatedUserInfoAsync();
             if (authInfo is null) return;
 
-            _sender = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
+            sender = await TeacherService.GetTeacherInfoAsync(authInfo.UserId);
         }
 
-        _receiver = await StandardUserService.GetUserInfoAsync(ReceiverUserId);
-        if (_receiver is null) return;
+        receiver = await StandardUserService.GetUserInfoAsync(ReceiverUserId);
+        if (receiver is null) return;
 
-        _pageTitle = $"Your chat with {_receiver.Title}. {_receiver.LastName} | WMH";
+        pageTitle = $"Your chat with {receiver.Title}. {receiver.LastName} | WMH";
 
     }
 

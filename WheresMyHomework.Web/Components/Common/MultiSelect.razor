@@ -1,13 +1,28 @@
 ﻿@typeparam TItem where TItem : notnull
 
 <div class="dropdown @CssClass">
+    @* Toggle dropdown *@
     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" @onclick="ToggleDropdown">
         @Title
     </button>
-    <div class="dropdown-menu w-100 @DropdownClass overflow-y-scroll" style=@(MaxHeight is null ? "" : $"max-height: {MaxHeight}rem;")>
+
+    @* Dropdown *@
+    <div class="dropdown-menu  @DropdownClass overflow-y-scroll"
+         style=@(MaxHeight is null ? "" : $"max-height: {MaxHeight}rem; min-height: 3rem;")>
+        @* Display this if there are no available items *@
+        @if (!Items.Any())
+        {
+            <div class="dropdown-item">
+                <p class="fst-italic">Looks like there's nothing here</p>
+            </div>
+        }
+
+        @* List available items *@
         @foreach (var item in Items)
         {
             <div class="dropdown-item" @onclick="() => ToggleSelection(item)">
+                @* Prevent default is used as otherwise the inputs will fire their own methods alongside the checked event *@
+                
                 <input class="form-check-input px-1" type="checkbox" id="@GetItemId(item)" checked="@IsSelected(item)"
                        @onclick:preventDefault="true"/>
 
@@ -29,12 +44,12 @@
 
     [Parameter] public string CssClass { get; set; } = string.Empty;
 
-    private bool _isOpen;
-    private string DropdownClass => _isOpen ? "show" : string.Empty;
+    private bool isOpen;
+    private string DropdownClass => isOpen ? "show" : string.Empty;
 
     private void ToggleDropdown()
     {
-        _isOpen = !_isOpen;
+        isOpen = !isOpen;
     }
 
     private void ToggleSelection(TItem item)

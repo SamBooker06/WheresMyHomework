@@ -6,3 +6,4 @@ public record TodoResponseInfo
     public required bool IsComplete { get; set; }
     public required int Id {get ; init; }
 }
+

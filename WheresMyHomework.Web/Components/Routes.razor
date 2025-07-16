@@ -1,4 +1,4 @@
-﻿@using WheresMyHomework.Web.Components.Account.Shared
+﻿@using WheresMyHomework.Web.Components.Common
 
 @* This is responsible for routing the client to their page *@
 
@@ -7,7 +7,7 @@
         <FocusOnNavigate RouteData="routeData" Selector="h1"/>
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <RedirectToLogin/>
+                <RedirectToHome/>
             </NotAuthorized>
         </AuthorizeRouteView>
     </Found>

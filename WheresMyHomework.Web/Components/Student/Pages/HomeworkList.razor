@@ -13,35 +13,44 @@
 
 <PageTitle>View homework | WMH</PageTitle>
 
+@* Filter *@
 <section class="w-100 border mb-2 d-flex align-items-start py-2">
-    <EditForm class="h-100 mx-2" FormName="SearchFilter" Model="_searchFilter" OnValidSubmit="ApplySearchFilterAsync">
+    <EditForm class="h-100 mx-2" FormName="SearchFilter" Model="searchFilter" OnValidSubmit="ApplySearchFilterAsync">
         <div class="h-100 d-flex align-items-center">
+            @* Task name *@
             <div class="form-floating">
                 <InputText class="form-control" id="task-name-input" placeholder=" "
-                           @bind-Value="_searchFilter.TaskName"/>
+                           @bind-Value="searchFilter.TaskName"/>
                 <label for="task-name-input" class="form-label">Task name</label>
             </div>
 
+            @* Title must be exact match? *@
             <div class="mx-2 px-2 d-inline-flex align-items-center border">
                 <InputCheckbox id="exact-match-input" class="form-check px-2 text-center"
-                               @bind-Value="_searchFilter.ExactMatch"/>
+                               @bind-Value="searchFilter.ExactMatch"/>
                 <label for="exact-match-input" class="d-inline px-2">Exact match</label>
             </div>
 
+            @* Tags *@
             <div class="mx-2">
-                <MultiSelect Items="_availableTags" SelectedItems="_searchFilter.Tags" Title="Tags"
+                <MultiSelect Items="availableTags" SelectedItems="searchFilter.Tags" Title="Tags"
                              ItemTransformer="tag => tag.Name" MaxHeight="30"/>
             </div>
+            
+            @* Priorities *@
             <div class="mx-2">
-                <MultiSelect Items="_availablePriorities" SelectedItems="_searchFilter.Priorities" Title="Priorities"
+                <MultiSelect Items="availablePriorities" SelectedItems="searchFilter.Priorities" Title="Priorities"
                              ItemTransformer="priority => priority.ToString()"/>
             </div>
+            
+            @* Search / reset buttons *@
             <button class="btn btn-primary mx-2">Search</button>
             <button class="btn btn-outline-warning mx-2" type="reset" @onclick="ResetFormAsync">Reset</button>
 
+            @* Only show incomplete toggle *@
             <span class="d-inline-flex align-items-center">
                 <InputCheckbox class="form-check d-inline mx-2" id="only-incomplete-toggle"
-                               @bind-Value="_onlyDisplayIncomplete"/>
+                               @bind-Value="onlyDisplayIncomplete"/>
                 <label for="only-incomplete-toggle">Only show incomplete</label>
             </span>
         </div>
@@ -53,46 +62,43 @@
 <hr/>
 
 <article>
-    @foreach (var task in _homeworkTasks)
+    @foreach (var task in homeworkTasks)
     {
-        <div @key="task.Id" hidden="@(task.IsComplete && _onlyDisplayIncomplete)">
+        <div @key="task.Id" hidden="@(task.IsComplete && onlyDisplayIncomplete)">
             <HomeworkEntry TaskInfo="task" OnClick="RedirectToHomeworkDetailView"/>
         </div>
     }
 </article>
 
 @code {
-    private ICollection<StudentHomeworkResponseInfo> _homeworkTasks = [];
-    private bool _onlyDisplayIncomplete = false;
-    private string? _userId;
+    private ICollection<StudentHomeworkResponseInfo> homeworkTasks = [];
+    private bool onlyDisplayIncomplete = true;
+    private string? userId;
 
-    private IEnumerable<TagResponseInfo> _availableTags = [];
-    private IEnumerable<Priority> _availablePriorities = Enum.GetValues<Priority>();
+    private IEnumerable<TagResponseInfo> availableTags = [];
+    private readonly IEnumerable<Priority> availablePriorities = Enum.GetValues<Priority>();
 
-    private bool _filterEnabled = false;
-    private FilterModel _searchFilter = new();
-
-    private bool HasOverDueTasks => _homeworkTasks.Any(task => !task.IsComplete 
-                                                               && task.DueDate < DateTime.Today);
+    private bool filterEnabled;
+    private FilterModel searchFilter = new();
 
     protected override async Task OnInitializedAsync()
     {
         var student = await StudentAuthService.GetAuthenticatedUserInfoAsync();
         if (student is null) return;
-        _userId = student.UserId;
+        userId = student.UserId;
 
-        if (_filterEnabled)
+        if (filterEnabled)
         {
-            _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId, _searchFilter.Filter);
+            homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId, searchFilter.Filter);
         }
         else
         {
-            _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId);
+            homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(student.UserId);
         }
 
-        _homeworkTasks = _homeworkTasks.OrderBy(task => task.DueDate).ToList();
+        homeworkTasks = homeworkTasks.OrderBy(task => task.DueDate).ToList();
 
-        _availableTags = await TagService.GetTagsAsync(student.UserId);
+        availableTags = await TagService.GetTagsAsync(student.UserId);
     }
 
     private void RedirectToHomeworkDetailView(StudentHomeworkResponseInfo taskResponseInfo)
@@ -103,7 +109,7 @@
     private class FilterModel
     {
         public string TaskName = string.Empty;
-        public bool ExactMatch = false;
+        public bool ExactMatch;
         public ICollection<TagResponseInfo> Tags = [];
         public ICollection<Priority> Priorities = [];
 
@@ -118,19 +124,19 @@
 
     private async Task ApplySearchFilterAsync()
     {
-        if (_userId is null) return;
+        if (userId is null) return;
 
-        _filterEnabled = true;
-        _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(_userId, _searchFilter.Filter);
+        filterEnabled = true;
+        homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(userId, searchFilter.Filter);
     }
 
     private async Task ResetFormAsync()
     {
-        if (_userId is null) return;
+        if (userId is null) return;
 
-        _searchFilter = new FilterModel();
-        _filterEnabled = false;
-        _homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(_userId);
+        searchFilter = new FilterModel();
+        filterEnabled = false;
+        homeworkTasks = await HomeworkService.GetStudentHomeworkAsync(userId);
     }
 
 }

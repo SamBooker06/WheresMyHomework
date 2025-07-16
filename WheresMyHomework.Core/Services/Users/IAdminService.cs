@@ -4,3 +4,4 @@ public interface IAdminService
 {
     Task<AdminInfo> GetAdminInfoAsync(string adminId);
 }
+

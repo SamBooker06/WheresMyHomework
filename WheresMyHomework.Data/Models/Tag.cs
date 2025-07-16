@@ -17,3 +17,4 @@ public class Tag
 
     public ICollection<StudentHomeworkTask> StudentHomeworkTasks { get; set; } = [];
 }
+

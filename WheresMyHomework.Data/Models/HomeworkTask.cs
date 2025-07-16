@@ -7,18 +7,19 @@ namespace WheresMyHomework.Data.Models;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 internal class LessThanDateAttribute(string comparisonPropertyName) : ValidationAttribute
 {
+    // This is used for ensuring that the DueDate attribute for homework tasks is after the set date
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        Debug.Assert(value != null);
-
+        ArgumentNullException.ThrowIfNull(value);
         ErrorMessage = ErrorMessageString;
         var currentValue = (DateTime)value;
 
         var property = validationContext.ObjectType.GetProperty(comparisonPropertyName);
-        Debug.Assert(property != null);
-        var comparisonValue = (DateTime)property.GetValue(validationContext.ObjectInstance);
+        ArgumentNullException.ThrowIfNull(property);
+        var comparisonValue = property.GetValue(validationContext.ObjectInstance);
+        if (comparisonValue is null) throw new ValidationException(ErrorMessage);
 
-        return comparisonValue < currentValue ? new ValidationResult(ErrorMessage) : ValidationResult.Success;
+        return (DateTime)comparisonValue < currentValue ? new ValidationResult(ErrorMessage) : ValidationResult.Success;
     }
 }
 

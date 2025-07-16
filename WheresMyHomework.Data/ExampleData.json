@@ -1,0 +1,344 @@
+﻿{
+  "Users": [
+    {
+      "FirstName": "John",
+      "LastName": "Doe",
+      "UserId": "c2d5f43a-d5f2-4b2c-bf3d-7b54d2a71f63",
+      "Email": "johndoe@example.com",
+      "UserType": "Teacher",
+      "SchoolId": 1,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Jane",
+      "LastName": "Smith",
+      "UserId": "f4a3b56e-a2f3-4b1c-83d1-2a5d5e271f72",
+      "Email": "janesmith@example.com",
+      "UserType": "Student",
+      "SchoolId": 1,
+      "Title": "Ms"
+    },
+    {
+      "FirstName": "Alice",
+      "LastName": "Johnson",
+      "UserId": "d3a1c43b-c3f2-4a3b-bf2d-6b51d3c71f62",
+      "Email": "alicejohnson@example.com",
+      "UserType": "Admin",
+      "SchoolId": 2,
+      "Title": "Dr"
+    },
+    {
+      "FirstName": "Michael",
+      "LastName": "Brown",
+      "UserId": "a4d6e57b-d5c3-4e2f-a71c-3b75d2f14a82",
+      "Email": "michaelbrown@example.com",
+      "UserType": "Teacher",
+      "SchoolId": 1,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Emily",
+      "LastName": "Clark",
+      "UserId": "b7c5f48a-c3d4-4e2a-bf2e-6c51d4a18f72",
+      "Email": "emilyclark@example.com",
+      "UserType": "Student",
+      "SchoolId": 2,
+      "Title": "Ms"
+    },
+    {
+      "FirstName": "Robert",
+      "LastName": "Wilson",
+      "UserId": "d5e6f43b-d2f4-4b1c-bf3d-7e54c3d71f63",
+      "Email": "robertwilson@example.com",
+      "UserType": "Teacher",
+      "SchoolId": 3,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Laura",
+      "LastName": "Martinez",
+      "UserId": "f7a3b56e-a3f2-4b2c-83d2-2b5d6e271f72",
+      "Email": "lauramartinez@example.com",
+      "UserType": "Student",
+      "SchoolId": 3,
+      "Title": "Ms"
+    },
+    {
+      "FirstName": "Thomas",
+      "LastName": "Anderson",
+      "UserId": "c3a2c43b-c2f3-4a1b-bf2c-6b51e3c71f63",
+      "Email": "thomasanderson@example.com",
+      "UserType": "Admin",
+      "SchoolId": 4,
+      "Title": "Dr"
+    },
+    {
+      "FirstName": "Sophia",
+      "LastName": "Lee",
+      "UserId": "a6d7e58b-d6c3-4e3f-a72c-3b76d3f14a83",
+      "Email": "sophialee@example.com",
+      "UserType": "Teacher",
+      "SchoolId": 4,
+      "Title": "Mrs"
+    },
+    {
+      "FirstName": "Ethan",
+      "LastName": "Walker",
+      "UserId": "b8c6f49a-c4d5-4e3a-bf2f-6c52d4a19f73",
+      "Email": "ethanwalker@example.com",
+      "UserType": "Student",
+      "SchoolId": 4,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Chloe",
+      "LastName": "Taylor",
+      "UserId": "e5f6d78b-d3c4-4b1d-bf4d-7c53d2e81f64",
+      "Email": "chloetaylor@example.com",
+      "UserType": "Student",
+      "SchoolId": 5,
+      "Title": "Ms"
+    },
+    {
+      "FirstName": "David",
+      "LastName": "White",
+      "UserId": "f8c7d59a-e3d5-4e3b-bf2e-8d62d4a19f74",
+      "Email": "davidwhite@example.com",
+      "UserType": "Admin",
+      "SchoolId": 1,
+      "Title": "Dr"
+    },
+    {
+      "FirstName": "Isabella",
+      "LastName": "Harris",
+      "UserId": "g2d5f43a-d6f2-4b2c-bf3d-7b64d2a81f63",
+      "Email": "isabellaharris@example.com",
+      "UserType": "Teacher",
+      "SchoolId": 2,
+      "Title": "Mrs"
+    },
+    {
+      "FirstName": "Oliver",
+      "LastName": "Martin",
+      "UserId": "h3a2d43b-d5f3-4b2c-bf2c-6b51f3c81f62",
+      "Email": "olivermartin@example.com",
+      "UserType": "Student",
+      "SchoolId": 3,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Emma",
+      "LastName": "Thomas",
+      "UserId": "i4d6e78b-d6f3-4e2c-bf3d-7c54e3c71f72",
+      "Email": "emmathomas@example.com",
+      "UserType": "Admin",
+      "SchoolId": 4,
+      "Title": "Dr"
+    },
+    {
+      "FirstName": "Lucas",
+      "LastName": "Garcia",
+      "UserId": "j5e7f43c-e2f4-4b2c-bf3d-7e55c3d81f63",
+      "Email": "lucasgarcia@example.com",
+      "UserType": "Teacher",
+      "SchoolId": 5,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Sophia",
+      "LastName": "Jones",
+      "UserId": "k7a3b78e-a3f2-4b2c-83d2-2b5e7e281f72",
+      "Email": "sophiajones@example.com",
+      "UserType": "Student",
+      "SchoolId": 1,
+      "Title": "Ms"
+    },
+    {
+      "FirstName": "Eleanor",
+      "LastName": "Lopez",
+      "UserId": "l3a2c56b-c3f3-4b2c-bf2d-6b52f3c91f63",
+      "Email": "eleanorlopez@example.com",
+      "UserType": "Admin",
+      "SchoolId": 2,
+      "Title": "Dr"
+    },
+    {
+      "FirstName": "Noah",
+      "LastName": "Young",
+      "UserId": "m5d7e59b-d5c3-4e3f-a73c-3b77d3f14a84",
+      "Email": "noahyoung@example.com",
+      "UserType": "Teacher",
+      "SchoolId": 3,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Ava",
+      "LastName": "King",
+      "UserId": "n8c6f49a-c4d5-4e3a-bf2f-6c53d4a29f74",
+      "Email": "avaking@example.com",
+      "UserType": "Student",
+      "SchoolId": 4,
+      "Title": "Ms"
+    },
+    {
+      "FirstName": "Liam",
+      "LastName": "Taylor",
+      "UserId": "o1f2d65a-bf8c-4b1c-88c5-8b23e9d7b1f2",
+      "Email": "liamtaylor@example.com",
+      "UserType": "Student",
+      "SchoolId": 1,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Mason",
+      "LastName": "Davis",
+      "UserId": "p2g4h56b-c8d1-4d3b-93c9-7a5d6e8c7f12",
+      "Email": "masondavis@example.com",
+      "UserType": "Student",
+      "SchoolId": 2,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Amelia",
+      "LastName": "Hernandez",
+      "UserId": "q3d5f76a-bd6c-4a1d-82f2-9c13e3f4f532",
+      "Email": "ameliahernandez@example.com",
+      "UserType": "Student",
+      "SchoolId": 3,
+      "Title": "Ms"
+    },
+    {
+      "FirstName": "Elijah",
+      "LastName": "Scott",
+      "UserId": "r4e8g65b-ef9c-42b2-bff7-2c35f7e5f962",
+      "Email": "elijahscott@example.com",
+      "UserType": "Student",
+      "SchoolId": 4,
+      "Title": "Mr"
+    },
+    {
+      "FirstName": "Charlotte",
+      "LastName": "Miller",
+      "UserId": "s5f7h76a-bd8d-4e2d-9bfc-7b33e4f8f472",
+      "Email": "charlottemiller@example.com",
+      "UserType": "Student",
+      "SchoolId": 5,
+      "Title": "Ms"
+    }
+  ],
+  "Schools": [
+    {
+      "SchoolName": "Greenfield High",
+      "SchoolId": 1
+    },
+    {
+      "SchoolName": "Sunrise Elementary",
+      "SchoolId": 2
+    },
+    {
+      "SchoolName": "Lakeside Academy",
+      "SchoolId": 3
+    },
+    {
+      "SchoolName": "Mountain View School",
+      "SchoolId": 4
+    },
+    {
+      "SchoolName": "Riverdale High",
+      "SchoolId": 5
+    }
+  ],
+  "Classes": [
+    {
+      "ClassName": "Math 101",
+      "SubjectId": 1,
+      "TeacherId": "c2d5f43a-d5f2-4b2c-bf3d-7b54d2a71f63",
+      "Students": [
+        "f4a3b56e-a2f3-4b1c-83d1-2a5d5e271f72",
+        "b7c5f48a-c3d4-4e2a-bf2e-6c51d4a18f72",
+        "o1f2d65a-bf8c-4b1c-88c5-8b23e9d7b1f2",
+        "p2g4h56b-c8d1-4d3b-93c9-7a5d6e8c7f12"
+      ]
+    },
+    {
+      "ClassName": "Science 202",
+      "SubjectId": 2,
+      "TeacherId": "a4d6e57b-d5c3-4e2f-a71c-3b75d2f14a82",
+      "Students": [
+        "f4a3b56e-a2f3-4b1c-83d1-2a5d5e271f72",
+        "b8c6f49a-c4d5-4e3a-bf2f-6c52d4a19f73",
+        "q3d5f76a-bd6c-4a1d-82f2-9c13e3f4f532"
+      ]
+    },
+    {
+      "ClassName": "History 303",
+      "SubjectId": 3,
+      "TeacherId": "d5e6f43b-d2f4-4b1c-bf3d-7e54c3d71f63",
+      "Students": [
+        "f7a3b56e-a3f2-4b2c-83d2-2b5d6e271f72",
+        "b8c6f49a-c4d5-4e3a-bf2f-6c52d4a19f73",
+        "r4e8g65b-ef9c-42b2-bff7-2c35f7e5f962"
+      ]
+    },
+    {
+      "ClassName": "Art 404",
+      "SubjectId": 4,
+      "TeacherId": "a6d7e58b-d6c3-4e3f-a72c-3b76d3f14a83",
+      "Students": [
+        "b7c5f48a-c3d4-4e2a-bf2e-6c51d4a18f72",
+        "f7a3b56e-a3f2-4b2c-83d2-2b5d6e271f72",
+        "s5f7h76a-bd8d-4e2d-9bfc-7b33e4f8f472"
+      ]
+    },
+    {
+      "ClassName": "Physics 505",
+      "SubjectId": 5,
+      "TeacherId": "j5e7f43c-e2f4-4b2c-bf3d-7e55c3d81f63",
+      "Students": [
+        "k7a3b78e-a3f2-4b2c-83d2-2b5e7e281f72",
+        "n8c6f49a-c4d5-4e3a-bf2f-6c53d4a29f74",
+        "o1f2d65a-bf8c-4b1c-88c5-8b23e9d7b1f2"
+      ]
+    },
+    {
+      "ClassName": "Chemistry 606",
+      "SubjectId": 1,
+      "TeacherId": "m5d7e59b-d5c3-4e3f-a73c-3b77d3f14a84",
+      "Students": [
+        "a6d7e58b-d6c3-4e3f-a72c-3b76d3f14a83",
+        "e5f6d78b-d3c4-4b1d-bf4d-7c53d2e81f64",
+        "m5d7e59b-d5c3-4e3f-a73c-3b77d3f14a84"
+      ]
+    }
+  ],
+  "Subjects": [
+    {
+      "SubjectName": "Mathematics",
+      "SubjectId": 1
+    },
+    {
+      "SubjectName": "Science",
+      "SubjectId": 2
+    },
+    {
+      "SubjectName": "History",
+      "SubjectId": 3
+    },
+    {
+      "SubjectName": "Art",
+      "SubjectId": 4
+    },
+    {
+      "SubjectName": "Physics",
+      "SubjectId": 5
+    },
+    {
+      "SubjectName": "Chemistry",
+      "SubjectId": 6
+    },
+    {
+      "SubjectName": "Biology",
+      "SubjectId": 7
+    }
+  ]
+}

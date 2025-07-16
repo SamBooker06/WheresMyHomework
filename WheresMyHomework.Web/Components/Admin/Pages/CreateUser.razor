@@ -4,14 +4,13 @@
 
 @page "/Users/Create"
 
-@inject IUserStore<ApplicationUser> UserStore
 @inject UserManager<ApplicationUser> UserManager
 
 @rendermode InteractiveServer
 
 <PageTitle>Create new user | WMH</PageTitle>
 
-@if (_justCreated)
+@if (justCreated)
 {
     <div class="alert alert-success">Successfully created new user!</div>
 }
@@ -21,14 +20,15 @@
         <h1 class="card-title">Create new user</h1>
 
         <section class="card-body m-2">
-            <EditForm method="post" class="row gx-3" Model="_userModel" FormName="CreateNewUser"
+            <EditForm method="post" class="row gx-3" Model="userModel" FormName="CreateNewUser"
                       OnValidSubmit="async () => await CreateNewUserAsync()">
                 <DataAnnotationsValidator/>
 
                 <div class="row">
                     <div class="col-md-2">
+                        @* Get the new user's title *@
                         <InputSelect class="form-control form-select" TValue="PersonTitle"
-                                     @bind-Value="_userModel.Title">
+                                     @bind-Value="userModel.Title">
                             @foreach (var title in Enum.GetValues<PersonTitle>())
                             {
                                 <option value="@title">@title</option>
@@ -37,13 +37,15 @@
                     </div>
 
                     <div class="col-md-3 form-floating">
-                        <InputText id="first-name-input" class="form-control" @bind-Value="_userModel.FirstName"
+                        @* Get first name *@
+                        <InputText id="first-name-input" class="form-control" @bind-Value="userModel.FirstName"
                                    placeholder=" "/>
                         <label class="form-label" for="first-name-input">First name</label>
                     </div>
 
                     <div class="col-md-3 form-floating">
-                        <InputText id="last-name-input" class="form-control" @bind-Value="_userModel.LastName"
+                        @* Get last name *@
+                        <InputText id="last-name-input" class="form-control" @bind-Value="userModel.LastName"
                                    placeholder=" "/>
                         <label class="form-label" for="last-name-input">Last name</label>
                     </div>
@@ -51,9 +53,10 @@
 
                 <div class="row mt-3">
                     <div class="col-md-2">
+                        @* Dropdown to select the user type (admin/teacher/student) *@
                         <InputSelect
                             class="form-control form-select mb-2"
-                            TValue="UserType" @bind-Value="_userModel.UserType">
+                            TValue="UserType" @bind-Value="userModel.UserType">
                             <option value="@UserType.Admin">Admin</option>
                             <option value="@UserType.Teacher">Teacher</option>
                             <option value="@UserType.Student">Student</option>
@@ -61,7 +64,8 @@
                     </div>
 
                     <div class="col-md-4 form-floating mb-3">
-                        <InputText id="email-input" @bind-Value="_userModel.Email"
+                        @* Get email *@
+                        <InputText id="email-input" @bind-Value="userModel.Email"
                                    class="form-control" placeholder=" " type="email"/>
                         <label class="form-label" for="email-input">Email address</label>
 
@@ -80,7 +84,7 @@
 
 
 @code {
-    private bool _justCreated = false;
+    private bool justCreated;
 
     private enum UserType
     {
@@ -89,7 +93,7 @@
         Student
     }
 
-    private UserModel _userModel = new();
+    private UserModel userModel = new();
 
     private class UserModel
     {
@@ -109,10 +113,10 @@
     {
         return new Admin
         {
-            FirstName = _userModel.FirstName,
-            LastName = _userModel.LastName,
-            Email = _userModel.Email,
-            Title = _userModel.Title,
+            FirstName = userModel.FirstName,
+            LastName = userModel.LastName,
+            Email = userModel.Email,
+            Title = userModel.Title,
             SchoolId = adminInfo.SchoolId,
             EmailConfirmed = true,
         };
@@ -121,43 +125,48 @@
     // Creates a new user with no password
     private async Task CreateNewUserAsync()
     {
+        // Get authentication info
         var adminAuth = await AdminAuthService.GetAuthenticatedUserInfoAsync();
         if (adminAuth is null) return;
 
+        // Get admin info
         var adminInfo = await AdminService.GetAdminInfoAsync(adminAuth.UserId);
 
-        ApplicationUser user = _userModel.UserType switch
+        // Create user depending on user type
+        ApplicationUser user = userModel.UserType switch
         {
             UserType.Admin => CreateAdmin(adminInfo),
             UserType.Teacher => CreateTeacher(adminInfo),
             UserType.Student => CreateStudent(adminInfo),
-            _ => throw new ApplicationException($"Unexpected user type, {_userModel.UserType}")
+            _ => throw new ApplicationException($"Unexpected user type, {userModel.UserType}")
         };
 
-        var username = _userModel.Email.Split('@')[0];
-        await UserStore.SetUserNameAsync(user, username, CancellationToken.None);
-        var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
-        await emailStore.SetEmailAsync(user, _userModel.Email, CancellationToken.None);
-
-        // var password = GeneratePassword();
-
+        // Get username from email
+        var username = userModel.Email.Split('@')[0]; 
+        
+        await UserManager.SetUserNameAsync(user, username);
+        await UserManager.SetEmailAsync(user, userModel.Email);
+        
         // Create a user without a password
         var result = await UserManager.CreateAsync(user);
         if (!result.Succeeded) return;
-        await UserManager.AddToRoleAsync(user, _userModel.UserType.ToString());
-        _userModel = new UserModel(); // Reset form
+        
+        await UserManager.AddToRoleAsync(user, userModel.UserType.ToString());
+        
+        // Reset the form inputs
+        userModel = new UserModel();
 
-        _justCreated = true;
+        justCreated = true;
     }
 
     private Student CreateStudent(AdminInfo adminInfo)
     {
         return new Student
         {
-            FirstName = _userModel.FirstName,
-            LastName = _userModel.LastName,
-            Email = _userModel.Email,
-            Title = _userModel.Title,
+            FirstName = userModel.FirstName,
+            LastName = userModel.LastName,
+            Email = userModel.Email,
+            Title = userModel.Title,
             SchoolId = adminInfo.SchoolId,
             EmailConfirmed = true,
         };
@@ -167,10 +176,10 @@
     {
         return new Teacher
         {
-            FirstName = _userModel.FirstName,
-            LastName = _userModel.LastName,
-            Email = _userModel.Email,
-            Title = _userModel.Title,
+            FirstName = userModel.FirstName,
+            LastName = userModel.LastName,
+            Email = userModel.Email,
+            Title = userModel.Title,
             SchoolId = adminInfo.SchoolId,
             EmailConfirmed = true,
         };

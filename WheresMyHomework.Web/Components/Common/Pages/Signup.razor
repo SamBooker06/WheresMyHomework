@@ -19,25 +19,29 @@
 
 <main class="">
     <div class="">
-        @if (!_alreadyExists)
+        @if (!alreadyExists)
         {
             <EditForm method="post" Model="SignupInfoModel" FormName="Signup" Enhance="@true"
                       OnValidSubmit="async () => await SignupAsync()">
-                <ValidationSummary/>
-
+                @if (SignupInfoModel.HasSignedUp)
+                {
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary/>
+                }
                 <div class="d-flex align-items-center flex-column">
+                    @* This hidden checkbox is used to be able to "refresh" the page and display the set password *@
+                    @* controls. Normally not needed if the render mode is InteractiveServer, but authentication *@
+                    @* in blazor can only be done with static rendering *@
                     <InputCheckbox hidden @bind-Value="SignupInfoModel.HasSignedUp"/>
 
 
+                    @* Get email address *@
                     <div class="form-floating col-md-6 mb-3">
                         <InputText readonly="@SignupInfoModel.HasSignedUp" id="email-input" class="form-control"
                                    placeholder=" "
                                    @bind-Value="SignupInfoModel.Email"/>
                         <label class="form-label" for="email-input">Email address</label>
                     </div>
-
-
-                    @* This is needed to persist whether the user has already signed up *@
 
                     @if (!SignupInfoModel.HasSignedUp)
                     {
@@ -46,21 +50,23 @@
                     else
                     {
                         <h5>Create a password for your account</h5>
-                        
+
+                        // Get user password and confirm that it matches confirm
                         <div class="form-floating col-md-6 mb-3">
                             <InputText autofocus type="password" id="password-input" class="form-control "
                                        placeholder=" "
                                        @bind-Value="SignupInfoModel.Password"/>
                             <label class="form-label" for="password-input">Password</label>
                         </div>
-                        
+
                         <div class="form-floating col-md-6 mb-3">
                             <InputText autofocus type="password" id="confirm-password-input" class="form-control "
                                        placeholder=" "
-                                       @bind-Value="SignupInfoModel.Password"/>
+                                       @bind-Value="SignupInfoModel.ConfirmPassword"/>
                             <label class="form-label" for="confirm-password-input">Confirm password</label>
                         </div>
-                        
+
+                        // Submit form
                         <button class="btn btn-primary col-md-3" type="submit">Set new password</button>
                     }
                 </div>
@@ -76,17 +82,22 @@
 @code {
     [SupplyParameterFromForm] private SignupModel SignupInfoModel { get; set; } = new();
 
-    private bool _alreadyExists;
+    private bool alreadyExists;
 
     private class SignupModel
     {
         [Required, EmailAddress, DataType(DataType.EmailAddress)]
         public string Email { get; set; } = string.Empty;
 
-        [Required, PasswordPropertyText, MaxLength(36), DataType(DataType.Password), Display(Name = "Password")]
+        [Required(ErrorMessage = "Password is required.")]
+        [StringLength(36, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 8)]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$",
+            ErrorMessage = "The password must contain at " +
+                           "least one uppercase letter, one " +
+                           "lowercase letter, one special character, and one number.")]
         public string Password { get; set; } = string.Empty;
 
-        [Required, PasswordPropertyText, MaxLength(36), Display(Name = "Confirm password"), Compare("Password")]
+        [Required, StringLength(36), Compare("Password")]
         public string ConfirmPassword { get; set; } = string.Empty;
 
         public bool HasSignedUp { get; set; }
@@ -105,12 +116,12 @@
             var result = await SignInManager.PasswordSignInAsync(user, SignupInfoModel.Password, true, false);
             if (!result.Succeeded) return false;
 
-            Navigator.Refresh();
+            Navigator.NavigateTo("/");
         }
 
         if (await UserManager.HasPasswordAsync(user))
         {
-            _alreadyExists = true;
+            alreadyExists = true;
             return false;
         }
 

@@ -1,8 +1,11 @@
 ﻿@using System.ComponentModel.DataAnnotations
+@using WheresMyHomework.Core.Services.Homework.DTO.Response
+
+@inject NavigationManager Navigator
 
 @rendermode InteractiveServer
 
-@if (!_loadedSuccessfully)
+@if (!loadedSuccessfully)
 {
     <p class="text-danger">There was a problem loading this task.</p>
 }
@@ -10,9 +13,13 @@ else
 {
     <PageTitle>Edit @Input.Title | WMH</PageTitle>
 
-    <h1>@Input.Title</h1>
+    <div class="mb-3 d-flex align-items-center">
+        <h1 class="d-inline">@Input.Title</h1>
+        <i class="bi bi-trash-fill d-inline text-danger mx-md-3 border rounded px-1 border-danger "
+           style="cursor: pointer" @onclick="DeleteTaskAsync"></i>
+    </div>
 
-    <div class="alert alert-success" hidden="@(!_hasUpdated)">Updated homework!</div>
+    <div class="alert alert-success" hidden="@(!hasUpdated)">Updated homework!</div>
 
     <section>
         <EditForm Model="Input" method="post" OnValidSubmit="SubmitFormAsync" FormName="CreateHomework">
@@ -50,20 +57,21 @@ else
     [Parameter, EditorRequired] public required int HomeworkId { get; set; } = -1;
     private HomeworkFormInput Input { get; set; } = new();
 
-    private bool _hasUpdated = false;
-    private bool _loadedSuccessfully = false;
+    private bool hasUpdated = false;
+    private bool loadedSuccessfully = false;
+    private HomeworkResponseInfo? homeworkInfo;
 
     protected override async Task OnInitializedAsync()
     {
         if (HomeworkId == -1) return;
 
-        var homeworkInfo = await HomeworkService.GetHomeworkById(HomeworkId);
-
+        homeworkInfo = await HomeworkService.GetHomeworkById(HomeworkId);
+        
         Input.Title = homeworkInfo.Title;
         Input.Description = homeworkInfo.Description;
         Input.DueDate = homeworkInfo.DueDate;
-        
-        _loadedSuccessfully = true;
+
+        loadedSuccessfully = true;
     }
 
     private class HomeworkFormInput
@@ -82,8 +90,16 @@ else
         await HomeworkService.UpdateTitleAsync(HomeworkId, Input.Title);
         await HomeworkService.UpdateDueDateAsync(HomeworkId, Input.DueDate);
 
-        _hasUpdated = true;
+        hasUpdated = true;
         StateHasChanged();
+    }
+
+    private async Task DeleteTaskAsync()
+    {
+        if (homeworkInfo is null) return;
+        
+        await HomeworkService.DeleteHomeworkByIdAsync(HomeworkId);
+        Navigator.NavigateTo($"Classes/{homeworkInfo.Class.Id}?HasDeleted=true");
     }
 
 }

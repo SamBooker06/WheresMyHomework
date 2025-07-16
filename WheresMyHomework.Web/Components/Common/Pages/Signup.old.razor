@@ -1,0 +1,133 @@
+﻿@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigator
+
+@* @page "/Join" *@
+
+<PageTitle>Create a new account | WMH</PageTitle>
+
+
+<section class="mb-md-5 mb-sm-2">
+    <h1>Hello,</h1>
+
+    <h5>Please enter your school email below</h5>
+</section>
+
+<main class="">
+    <div class="">
+        @if (!alreadyExists)
+        {
+            <EditForm method="post" Model="SignupInfoModel" FormName="Signup" Enhance="@true"
+                      OnValidSubmit="async () => await SignupAsync()">
+                <DataAnnotationsValidator/>
+                <ValidationSummary/>
+                <div class="d-flex align-items-center flex-column">
+                    @* This hidden checkbox is used to be able to "refresh" the page and display the set password *@
+                    @* controls. Normally not needed if the render mode is InteractiveServer, but authentication *@
+                    @* in blazor can only be done with static rendering *@
+                    <InputCheckbox hidden @bind-Value="SignupInfoModel.HasSignedUp"/>
+
+
+                    @* Get email address *@
+                    <div class="form-floating col-md-6 mb-3">
+                        <InputText readonly="@SignupInfoModel.HasSignedUp" id="email-input" class="form-control"
+                                   placeholder=" "
+                                   @bind-Value="SignupInfoModel.Email"/>
+                        <label class="form-label" for="email-input">Email address</label>
+                    </div>
+
+                    @if (!SignupInfoModel.HasSignedUp)
+                    {
+                        <button class="btn btn-primary col-md-3" type="submit">Sign up!</button>
+                    }
+                    else
+                    {
+                        <h5>Create a password for your account</h5>
+
+                        // Get user password and confirm that it matches confirm
+                        <div class="form-floating col-md-6 mb-3">
+                            <InputText autofocus type="password" id="password-input" class="form-control "
+                                       placeholder=" "
+                                       @bind-Value="SignupInfoModel.Password"/>
+                            <label class="form-label" for="password-input">Password</label>
+                        </div>
+
+                        <div class="form-floating col-md-6 mb-3">
+                            <InputText autofocus type="password" id="confirm-password-input" class="form-control "
+                                       placeholder=" "
+                                       @bind-Value="SignupInfoModel.Password"/>
+                            <label class="form-label" for="confirm-password-input">Confirm password</label>
+                        </div>
+
+                        // Submit form
+                        <button class="btn btn-primary col-md-3" type="submit">Set new password</button>
+                    }
+                </div>
+            </EditForm>
+        }
+        else
+        {
+            <p class="text-info">This account has already been created</p>
+        }
+    </div>
+</main>
+
+@code {
+    [SupplyParameterFromForm] private SignupModel SignupInfoModel { get; set; } = new();
+
+    private bool alreadyExists;
+
+    private class SignupModel
+    {
+        [Required, EmailAddress, DataType(DataType.EmailAddress)]
+        public string Email { get; set; } = string.Empty;
+
+        [Required, PasswordPropertyText, MaxLength(36), DataType(DataType.Password), Display(Name = "Password")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required, PasswordPropertyText, MaxLength(36), Display(Name = "Confirm password"), Compare("Password")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+        public bool HasSignedUp { get; set; }
+    }
+
+    private async Task<bool> SignupAsync()
+    {
+        var user = await UserManager.FindByEmailAsync(SignupInfoModel.Email);
+        if (user is null) return false;
+
+        if (SignupInfoModel.HasSignedUp)
+        {
+            var success = await ChangePasswordAsync(user);
+            if (!success) return false;
+
+            var result = await SignInManager.PasswordSignInAsync(user, SignupInfoModel.Password, true, false);
+            if (!result.Succeeded) return false;
+
+            Navigator.Refresh();
+        }
+
+        if (await UserManager.HasPasswordAsync(user))
+        {
+            alreadyExists = true;
+            return false;
+        }
+
+        SignupInfoModel.HasSignedUp = true;
+
+        return true;
+    }
+
+    private async Task<bool> ChangePasswordAsync(ApplicationUser user)
+    {
+        var resetToken = await UserManager.GeneratePasswordResetTokenAsync(user);
+        var result = await UserManager.ResetPasswordAsync(user, resetToken, SignupInfoModel.Password);
+
+        return result.Succeeded;
+    }
+
+}

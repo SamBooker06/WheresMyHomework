@@ -11,15 +11,16 @@ using WheresMyHomework.Core.Services.TodoService;
 using WheresMyHomework.Core.Services.Users;
 using WheresMyHomework.Data;
 using WheresMyHomework.Data.Models.Users;
+using WheresMyHomework.Web.Account;
 using WheresMyHomework.Web.Components;
-using WheresMyHomework.Web.Components.Account;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Enabled use of razor components and InteractiveServer rendering
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Provides access to authorisation to components in the application
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
@@ -34,34 +35,23 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("HasAdminRole", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("HasTeacherRole",
-        policy => policy.RequireRole("Teacher"));
-    options.AddPolicy("HasStudentRole",
-        policy => policy.RequireRole("Student"));
-    options.AddPolicy("HasSuperAdminRole",
-        policy => policy.RequireRole("SuperAdmin"));
-});
+// Configure HSTS max age. This tells browsers to only communicate over HTTPS rather than HTTP
+builder.Services.AddHsts(options => { options.MaxAge = TimeSpan.FromDays(365); });
 
+// Configure SQL connection
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection") ??
     throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' not found.");
+        "Invalid connection string");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
-        options.SignIn.RequireConfirmedAccount = true)
+        options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
-
-builder.Services
-    .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 // Custom services
 builder.Services.AddScoped<IMessagingService, MessagingService>();
@@ -83,7 +73,6 @@ builder.Services.AddScoped<ITagService, TagService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -91,7 +80,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -104,8 +92,7 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Add additional endpoints required by the Identity /Account Razor components.
-app.MapAdditionalIdentityEndpoints();
+app.MapLogoutEndpoint();
 
 app.UseStatusCodePagesWithRedirects("/StatusCode/{0}");
 
@@ -116,7 +103,8 @@ await using (var scope = app.Services.CreateAsyncScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    await SeedData.InitialiseDataAsync(context, roleManager, userManager);
+    await SeedData.InitialiseDataAsync(context, roleManager, userManager, true);
 }
 
 await app.RunAsync();
+
